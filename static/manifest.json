@@ -1,7 +1,7 @@
 {
-    "short_name": "honfoglalo-legacy",
     "name": "Honfoglaló Legacy",
     "start_url": "/",
+    "orientation": "landscape",
     "icons": [
         {
             "src": "logo_512.png",

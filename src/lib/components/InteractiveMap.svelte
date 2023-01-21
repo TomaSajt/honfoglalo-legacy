@@ -1,18 +1,26 @@
 <script lang="ts">
-    import type { MapInfo } from "$lib/mapInfo";
+    import type { MapInfo, RegionState } from "$lib/mapInfo";
     export let mapInfo: MapInfo;
-    export let onRegionClicked: (regionId: string) => void;
+    export let onRegionClicked: (index: number) => void;
+    export let regionStates: RegionState[];
 </script>
 
 <svg version="1.0" viewBox={mapInfo.viewBox} {...$$restProps}>
     <g>
-        {#each mapInfo.regions as region (region.id)}
+        {#each mapInfo.regions as region, i}
+            {@const isGreen = regionStates[i].owner === "green"}
+            {@const isRed = regionStates[i].owner === "red"}
+            {@const isBlue = regionStates[i].owner === "blue"}
+            {@const hasNoOwner = regionStates[i].owner === "none"}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <path
-                tabindex="-1"
                 d={region.path}
-                class="region fill-green-300 stroke-black stroke-1 cursor-pointer"
-                on:click={() => onRegionClicked(region.id)}
+                class="region stroke-black stroke-1 cursor-pointer"
+                class:fill-green-300={isGreen}
+                class:fill-blue-300={isBlue}
+                class:fill-red-300={isRed}
+                class:fill-white={hasNoOwner}
+                on:click={() => onRegionClicked(i)}
             />
         {/each}
     </g>
@@ -27,7 +35,7 @@
 <style lang="postcss">
     @media (hover: hover) {
         .region:hover {
-            @apply fill-lime-200;
+            @apply brightness-90;
         }
     }
 </style>

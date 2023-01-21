@@ -10,6 +10,10 @@ export type MapInfo = {
     borderPath: string;
 };
 
+export type RegionState = {
+    owner: "red" | "green" | "blue" | "none";
+};
+
 const hungaryRegions: RegionPathInfo[] = [
     {
         id: "nograd",

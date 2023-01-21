@@ -2,7 +2,6 @@
     import type { MapInfo } from "$lib/mapInfo";
     export let mapInfo: MapInfo;
     export let onRegionClicked: (regionId: string) => void;
-    let lastClicked = "";
 </script>
 
 <svg version="1.0" viewBox={mapInfo.viewBox} {...$$restProps}>

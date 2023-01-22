@@ -2,4 +2,9 @@
     import "../app.pcss";
 </script>
 
-<slot />
+<header>
+    <a href="/">Főmenü</a>
+</header>
+<main class="h-full">
+    <slot />
+</main>

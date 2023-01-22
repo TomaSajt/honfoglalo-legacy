@@ -4,8 +4,8 @@
     let currentQuestion: Question = {
         type: "choice",
         question: "Mi a válasz?",
-        options: ["Válasz 0", "Válasz 1", "Válasz 2", "Válasz 3"],
-        correctIndex: 1,
+        options: ["Válasz A", "Válasz B", "Válasz C", "Válasz D"],
+        correctIndex: 0,
     };
 
     function download(filename: string, text: string) {
@@ -77,7 +77,7 @@
                         />
                     </div>
                     <button
-                        class="aspect-square flex-shrink-0"
+                        class="aspect-square flex-shrink-0 h-full"
                         class:bg-green-500={correct}
                         class:bg-red-500={!correct}
                         on:click={() => setCorrectIndex(i)}

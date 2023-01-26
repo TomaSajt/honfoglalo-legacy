@@ -5,7 +5,8 @@ const choiceQuestionSchema = z.object(
         type: z.literal("choice"),
         question: z.string(),
         options: z.array(z.string()).length(4),
-        correctIndex: z.number().int().gte(0).lt(4)
+        correctIndex: z.number().int().gte(0).lt(4),
+        timeLimit: z.number().int().min(1)
     }
 );
 
@@ -13,7 +14,8 @@ const guessQuestionSchema = z.object(
     {
         type: z.literal("guess"),
         question: z.string(),
-        solution: z.number()
+        solution: z.number(),
+        timeLimit: z.number().int().min(1)
     }
 );
 

@@ -1,27 +1,33 @@
 <script lang="ts">
     import InteractiveMap from "$lib/components/InteractiveMap.svelte";
-    import { hungary, type RegionState } from "$lib/mapInfo";
-    const mapInfo = hungary;
+    import { getMapFromId } from "$lib/mapInfo";
+    import { defaultGameState, type GameState } from "$lib/state";
+    const mapInfo = getMapFromId("hungary")!;
     let lastClicked = "";
-    let arr = ["green", "blue", "red"] as ("green" | "blue" | "red")[];
-    function cycle() {
+    let arr = [0, 1, 2];
+    function cycleTurn() {
         let el = arr.shift()!;
         arr = [...arr, el];
     }
-    let regionStates: RegionState[] = mapInfo.regions.map(() => ({
-        owner: "none",
-    }));
+    let gameState: GameState = defaultGameState(mapInfo);
     function onRegionClicked(index: number) {
-        if (regionStates[index].owner !== "none") return;
-        lastClicked = mapInfo.regions[index].name;
-        regionStates[index].owner = arr[0];
-        cycle();
+        const regionStates = gameState.regions;
+        if (regionStates[index].type === "empty") {
+            lastClicked = mapInfo.regions[index].name;
+            regionStates[index] = {
+                ownerId: arr[0],
+                type: "normal",
+                value: 300,
+            };
+            gameState = gameState;
+            cycleTurn();
+        }
     }
 </script>
 
 <InteractiveMap
     {onRegionClicked}
-    {regionStates}
+    regionStates={gameState.regions}
     {mapInfo}
     class="mx-auto w-2/3"
 />

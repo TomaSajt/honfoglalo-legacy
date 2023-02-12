@@ -1,13 +1,13 @@
 <script lang="ts">
     import InteractiveMap from "$lib/components/InteractiveMap.svelte";
     import { getMapFromId } from "$lib/mapInfo";
+    import { playerIdToHungarianName } from "$lib/player";
     import { defaultGameState, type GameState } from "$lib/state";
     const mapInfo = getMapFromId("hungary")!;
     let lastClicked = "";
-    let arr = [0, 1, 2];
+    let currentPlayer = 0;
     function cycleTurn() {
-        let el = arr.shift()!;
-        arr = [...arr, el];
+        currentPlayer = (currentPlayer + 1) % 3;
     }
     let gameState: GameState = defaultGameState(mapInfo);
     function onRegionClicked(index: number) {
@@ -15,7 +15,7 @@
         if (regionStates[index].type === "empty") {
             lastClicked = mapInfo.regions[index].name;
             regionStates[index] = {
-                ownerId: arr[0],
+                ownerId: currentPlayer,
                 type: "normal",
                 value: 300,
             };
@@ -31,5 +31,5 @@
     {mapInfo}
     class="mx-auto w-2/3"
 />
-<div>last clicked: {lastClicked}</div>
-<div>current player: {arr[0]}</div>
+<div>Utoljára elfoglalt megye: {lastClicked}</div>
+<div>Jelenlegi játékos: {playerIdToHungarianName(currentPlayer)}</div>

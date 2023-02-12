@@ -34,3 +34,21 @@ export function parseQuestionFromJsonText(text: string): Question | null {
         return null;
     }
 }
+
+export function defaultChoiceQuestion(): ChoiceQuestion {
+    return {
+        type: "choice",
+        question: "Mi a válasz?",
+        options: ["Válasz A", "Válasz B", "Válasz C", "Válasz D"],
+        correctIndex: 0,
+        timeLimit: 120,
+    };
+}
+export function defaultGuessQuestion(): GuessQuestion {
+    return {
+        type: "guess",
+        question: "Mennyi 1+1",
+        solution: 2,
+        timeLimit: 10,
+    };
+}

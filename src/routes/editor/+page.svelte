@@ -2,25 +2,19 @@
     import ChoiceQuestionEditor from "$lib/components/ChoiceQuestionEditor.svelte";
     import GuessQuestionEditor from "$lib/components/GuessQuestionEditor.svelte";
     import { downloadFile, loadFile } from "$lib/fileUtils";
-    import { parseQuestionFromJsonText, type Question } from "$lib/question";
+    import {
+        defaultChoiceQuestion,
+        defaultGuessQuestion,
+        parseQuestionFromJsonText,
+        type Question,
+    } from "$lib/question";
 
     let currentQuestion: Question | undefined;
     function generateDefaultChoiceQuestion() {
-        currentQuestion = {
-            type: "choice",
-            question: "Mi a válasz?",
-            options: ["Válasz A", "Válasz B", "Válasz C", "Válasz D"],
-            correctIndex: 0,
-            timeLimit: 20,
-        };
+        currentQuestion = defaultChoiceQuestion();
     }
     function generateDefaultGuessQuestion() {
-        currentQuestion = {
-            type: "guess",
-            question: "Mennyi 1+1",
-            solution: 2,
-            timeLimit: 10,
-        };
+        currentQuestion = defaultGuessQuestion();
     }
 
     async function processFile(file: File) {

@@ -1,5 +1,5 @@
 export function downloadFile(filename: string, text: string) {
-    var element = document.createElement("a");
+    let element = document.createElement("a");
     element.href = "data:text/plain;charset=utf-8," + encodeURIComponent(text);
     element.download = filename;
     element.style.display = "none";
@@ -13,6 +13,5 @@ export function loadFile(cb: (file: File) => void) {
         let file = input.files?.item(0);
         if (file) cb(file);
     };
-    input
     input.click();
 }

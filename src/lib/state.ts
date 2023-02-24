@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { hungaryMapInfo, type MapInfo } from "./mapInfo";
+import { hungaryMapInfo } from "./mapInfo";
 
 
 

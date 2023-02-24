@@ -6,11 +6,6 @@
     let currentQuestion = defaultGuessQuestion();
     let showQuestion = false;
 
-    function processResults(order: number[]) {
-        showQuestion = false;
-        console.log(order);
-    }
-
     let players: number[] = [];
     let resultCallback: (order: number[]) => any = () => {};
 

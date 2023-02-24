@@ -48,7 +48,7 @@ const haboruSchema = z.object({
 
 const gameProgressScema = z.discriminatedUnion('type', [bazisfoglalasSchema, terjeszkedesSchema, felosztasSchema, haboruSchema]);
 
-const gameStateSchema = z.object({
+export const gameStateSchema = z.object({
     regions: z.array(regionSchema),
     gameProgress: gameProgressScema
 });

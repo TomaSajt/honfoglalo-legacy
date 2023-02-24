@@ -4,17 +4,29 @@
     import { hungaryMapInfo } from "$lib/mapInfo";
     import { playerIdToHungarianName } from "$lib/player";
     import { defaultGuessQuestion } from "$lib/question";
-    import { defaultGameState, type GameState } from "$lib/state";
+    import { gameStateSchema } from "$lib/state";
+    import { gameState } from "$lib/stores";
+    import { onMount } from "svelte";
     let questionPrompter: QuestionPrompter;
+
+    onMount(() => {
+        let gameStateString = localStorage.getItem("gameState");
+        if (gameStateString !== null) {
+            $gameState = gameStateSchema.parse(JSON.parse(gameStateString));
+        }
+
+        gameState.subscribe((newState) => {
+            localStorage.setItem("gameState", JSON.stringify(newState));
+        });
+    });
 
     let lastClicked = "";
     let currentPlayer = 0;
     function cycleTurn() {
         currentPlayer = (currentPlayer + 1) % 3;
     }
-    let gameState: GameState = defaultGameState();
     function onRegionClicked(index: number) {
-        const regionStates = gameState.regions;
+        const regionStates = $gameState.regions;
         let regionState = regionStates[index];
         lastClicked = hungaryMapInfo.regions[index].name;
         if (regionState.type === "empty") {
@@ -23,7 +35,7 @@
                 type: "normal",
                 value: 300,
             };
-            gameState = gameState;
+            $gameState = $gameState;
             cycleTurn();
         } else {
             if (regionState.ownerId === currentPlayer) {
@@ -43,7 +55,7 @@
                                 value: 300,
                             };
                         }
-                        gameState = gameState;
+                        $gameState = $gameState;
                         cycleTurn();
                     }
                 );
@@ -54,7 +66,7 @@
 
 <InteractiveMap
     {onRegionClicked}
-    regionStates={gameState.regions}
+    regionStates={$gameState.regions}
     class="mx-auto w-2/3"
 />
 <div>Utoljára elfoglalt megye: {lastClicked}</div>

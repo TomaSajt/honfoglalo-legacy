@@ -4,7 +4,6 @@ export function playerIdToHungarianName(id: number) {
     if (id == 2) return "Kék";
     throw new Error("Invalid player id");
 }
-
 export function playerIdToStrongCssColor(id: number) {
     if (id == 0) return "red";
     if (id == 1) return "green";

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import type { MapInfo } from "./mapInfo";
+import { hungaryMapInfo, type MapInfo } from "./mapInfo";
 
 
 
@@ -49,20 +49,18 @@ const haboruSchema = z.object({
 const gameProgressScema = z.discriminatedUnion('type', [bazisfoglalasSchema, terjeszkedesSchema, felosztasSchema, haboruSchema]);
 
 const gameStateSchema = z.object({
-    mapId: z.string(),
     regions: z.array(regionSchema),
     gameProgress: gameProgressScema
 });
 
 export type Region = z.infer<typeof regionSchema>;
 export type GameState = z.infer<typeof gameStateSchema>;
-export type GameProgress = z.infer<typeof gameProgressScema>
+export type GameProgress = z.infer<typeof gameProgressScema>;
 
 
-export function defaultGameState(mapInfo: MapInfo): GameState {
+export function defaultGameState(): GameState {
     return {
-        mapId: mapInfo.id,
-        regions: Array(mapInfo.regions.length).fill(0).map(() => ({
+        regions: Array(hungaryMapInfo.regions.length).fill(0).map(() => ({
             type: 'empty'
         })),
         gameProgress: {

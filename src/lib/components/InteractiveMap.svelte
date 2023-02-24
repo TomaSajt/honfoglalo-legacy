@@ -1,8 +1,7 @@
 <script lang="ts">
-    import type { MapInfo } from "$lib/mapInfo";
+    import { hungaryMapInfo, type MapInfo } from "$lib/mapInfo";
     import { playerIdToWeakCssColor } from "$lib/player";
     import type { Region as RegionState } from "$lib/state";
-    export let mapInfo: MapInfo;
     export let onRegionClicked: (index: number) => void;
     export let regionStates: RegionState[];
 
@@ -12,9 +11,9 @@
     }
 </script>
 
-<svg version="1.0" viewBox={mapInfo.viewBox} {...$$restProps}>
+<svg version="1.0" viewBox={hungaryMapInfo.viewBox} {...$$restProps}>
     <g>
-        {#each mapInfo.regions as regionInfo, i}
+        {#each hungaryMapInfo.regions as regionInfo, i}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <path
                 fill={getRegionColor(regionStates[i])}
@@ -26,7 +25,7 @@
     </g>
     <g>
         <path
-            d={mapInfo.borderPath}
+            d={hungaryMapInfo.borderPath}
             class="fill-none stroke-red-600 stroke-[3]"
         />
     </g>

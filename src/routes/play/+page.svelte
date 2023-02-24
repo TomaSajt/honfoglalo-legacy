@@ -2,11 +2,11 @@
     import InteractiveMap from "$lib/components/InteractiveMap.svelte";
     import QuestionPrompter from "$lib/components/QuestionPrompter.svelte";
     import { hungaryMapInfo } from "$lib/mapInfo";
-    import { playerIdToHungarianName } from "$lib/player";
-    import { defaultGuessQuestion } from "$lib/question";
     import { gameStateSchema } from "$lib/state";
     import { gameState } from "$lib/stores";
     import { onMount } from "svelte";
+    import { defaultGuessQuestion } from "$lib/question";
+    import { assert } from "$lib/utils";
     let questionPrompter: QuestionPrompter;
 
     onMount(() => {
@@ -21,10 +21,84 @@
     });
 
     let lastClicked = "";
-    let currentPlayer = 0;
-    function cycleTurn() {
-        currentPlayer = (currentPlayer + 1) % 3;
+
+    function onRegionClicked(index: number) {
+        lastClicked = hungaryMapInfo.regions[index].name;
+        switch ($gameState.gameProgress.type) {
+            case "bazisfoglalas":
+                handleBazisfoglalas(index);
+                break;
+            case "terjeszkedes":
+                handleTerjeszkedes(index);
+                break;
+            case "felosztas":
+                break;
+            case "haboru":
+                break;
+        }
     }
+
+    function handleBazisfoglalas(index: number) {
+        assert($gameState.gameProgress.type === "bazisfoglalas");
+        if ($gameState.regions[index].type !== "empty") {
+            alert("Csak szabad vármegyéket foglalhatsz el");
+            return;
+        }
+        let currentPlayer = $gameState.gameProgress.player;
+        $gameState.regions[index] = {
+            ownerId: currentPlayer,
+            type: "fort",
+            towersRemaining: 3,
+            value: 1000,
+        };
+        if ($gameState.gameProgress.player === 2) {
+            $gameState.gameProgress = {
+                type: "terjeszkedes",
+                player: 0,
+                round: 0,
+            };
+        } else {
+            $gameState.gameProgress.player++;
+        }
+    }
+
+    function handleTerjeszkedes(index: number) {
+        assert($gameState.gameProgress.type === "terjeszkedes");
+        if ($gameState.regions[index].type !== "empty") {
+            alert("Csak szabad vármegyéket jelölhetsz meg");
+            return;
+        }
+        $gameState.regions[index] = {
+            type: "marked",
+            ownerId: $gameState.gameProgress.player,
+        };
+        // TODO: make sure that if the page reloads after having selected all the regions but before answering the question, show another question upon reload
+        if ($gameState.gameProgress.player === 2) {
+            questionPrompter.startGuess(
+                defaultGuessQuestion(),
+                [0, 1, 2],
+                (order) => {
+                    assert($gameState.gameProgress.type === "terjeszkedes");
+                    for (let i = 0; i < $gameState.regions.length; i++) {
+                        let region = $gameState.regions[i];
+                        if (region.type !== "marked") continue;
+                        let player = region.ownerId;
+                        $gameState.regions[i] = {
+                            type: "normal",
+                            ownerId: player,
+                            value: 200,
+                        };
+                        $gameState.gameProgress.player = 0;
+                        $gameState.gameProgress.round++;
+                    }
+                }
+            );
+        } else {
+            $gameState.gameProgress.player++;
+        }
+    }
+
+    /*
     function onRegionClicked(index: number) {
         const regionStates = $gameState.regions;
         let regionState = regionStates[index];
@@ -61,7 +135,7 @@
                 );
             }
         }
-    }
+    }*/
 </script>
 
 <InteractiveMap
@@ -69,7 +143,6 @@
     regionStates={$gameState.regions}
     class="mx-auto w-2/3"
 />
-<div>Utoljára elfoglalt megye: {lastClicked}</div>
-<div>Jelenlegi játékos: {playerIdToHungarianName(currentPlayer)}</div>
+<div>Utoljára kattintott megye: {lastClicked}</div>
 
 <QuestionPrompter bind:this={questionPrompter} />

@@ -16,3 +16,10 @@ export function playerIdToWeakCssColor(id: number) {
     if (id == 2) return "#93c5fd";
     throw new Error("Invalid player id");
 }
+
+export function playerIdToVeryWeakCssColor(id: number) {
+    if (id == 0) return "#fecaca";
+    if (id == 1) return "#bbf7d0";
+    if (id == 2) return "#bfdbfe";
+    throw new Error("Invalid player id");
+}

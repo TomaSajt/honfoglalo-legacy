@@ -7,13 +7,14 @@
     import { onMount } from "svelte";
     import { defaultGuessQuestion } from "$lib/question";
     import { assert } from "$lib/utils";
-    import { goto } from "$app/navigation";
     let questionPrompter: QuestionPrompter;
 
     onMount(() => {
         let gameStateString = localStorage.getItem("gameState");
         if (gameStateString !== null) {
-            $gameState = gameStateSchema.parse(JSON.parse(gameStateString));
+            let res = gameStateSchema.safeParse(JSON.parse(gameStateString));
+            if (res.success) $gameState = res.data;
+            else alert("Hiba a játék betöltsése során: " + res.error);
         }
 
         gameState.subscribe((newState) => {

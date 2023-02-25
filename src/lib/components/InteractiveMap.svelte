@@ -29,20 +29,32 @@
                 class="region stroke-black stroke-1 cursor-pointer"
                 on:click={() => onRegionClicked(i)}
             />
-            
+
             <image
                 href="logo_512.png"
                 width="50"
                 x={regionInfo.centerPos[0] - 25}
                 y={regionInfo.centerPos[1] - 25}
             />
-            
 
             <circle
                 cx={regionInfo.centerPos[0]}
                 cy={regionInfo.centerPos[1]}
                 r="5"
             />
+
+            {#each regionInfo.neighbours as nei}
+                {@const otherRegionInfo = hungaryMapInfo.regions.find(
+                    (x) => x.id == nei
+                )}
+                <line
+                    x1={regionInfo.centerPos[0]}
+                    y1={regionInfo.centerPos[1]}
+                    x2={otherRegionInfo?.centerPos[0]}
+                    y2={otherRegionInfo?.centerPos[1]}
+                    stroke="black"
+                />
+            {/each}
         {/each}
     </g>
     <g>

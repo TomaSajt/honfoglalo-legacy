@@ -3,9 +3,21 @@
     import { playerIdToStringId, playerIdToWeakCssColor } from "$lib/player";
     import type { Region as RegionState } from "$lib/state";
     import { assert } from "$lib/utils";
-    import { fly, fade } from "svelte/transition";
+    import {
+        fly,
+        fade,
+        type FlyParams,
+        type FadeParams,
+    } from "svelte/transition";
     export let onRegionClicked: (index: number) => void;
     export let regionStates: RegionState[];
+
+    const flyParams: FlyParams = {
+        y: -50,
+        duration: 200,
+        easing: (x) => x * x,
+    };
+    const fadeParams: FadeParams = { duration: 200 };
 
     function getRegionColor(regionState: RegionState) {
         if (regionState.type === "empty" || regionState.type === "marked")
@@ -34,12 +46,8 @@
 
             {#if regionState.type === "fort"}
                 <image
-                    in:fly={{
-                        y: -50,
-                        duration: 200,
-                        easing: (x) => x * x,
-                    }}
-                    out:fade={{ duration: 200 }}
+                    in:fly|local={flyParams}
+                    out:fade|local={fadeParams}
                     href={getFortImageUrl(regionStates[i])}
                     width="60"
                     x={regionInfo.centerPos[0] - 30}
@@ -47,12 +55,8 @@
                 />
             {:else if regionState.type === "marked"}
                 <image
-                    in:fly={{
-                        y: -50,
-                        duration: 200,
-                        easing: (x) => x * x,
-                    }}
-                    out:fade={{ duration: 200 }}
+                    in:fly|local={flyParams}
+                    out:fade|local={fadeParams}
                     href="logo_512.png"
                     width="40"
                     x={regionInfo.centerPos[0] - 20}

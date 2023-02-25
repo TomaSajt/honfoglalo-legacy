@@ -1,60 +1,69 @@
 <script lang="ts">
-    import { hungaryMapInfo, type MapInfo } from "$lib/mapInfo";
-    import {
-        playerIdToStrongCssColor,
-        playerIdToVeryWeakCssColor,
-        playerIdToWeakCssColor,
-    } from "$lib/player";
+    import { hungaryMapInfo } from "$lib/mapInfo";
+    import { playerIdToStringId, playerIdToWeakCssColor } from "$lib/player";
     import type { Region as RegionState } from "$lib/state";
+    import { assert } from "$lib/utils";
+    import { fly, fade } from "svelte/transition";
     export let onRegionClicked: (index: number) => void;
     export let regionStates: RegionState[];
 
     function getRegionColor(regionState: RegionState) {
-        if (regionState.type === "empty") return "white";
-        return regionState.type === "fort"
-            ? playerIdToStrongCssColor(regionState.ownerId)
-            : regionState.type === "marked"
-            ? playerIdToVeryWeakCssColor(regionState.ownerId)
-            : playerIdToWeakCssColor(regionState.ownerId);
+        if (regionState.type === "empty" || regionState.type === "marked")
+            return "white";
+        return playerIdToWeakCssColor(regionState.ownerId);
+    }
+
+    function getFortImageUrl(regionState: RegionState) {
+        assert(regionState.type === "fort");
+        let name = playerIdToStringId(regionState.ownerId);
+        return `fort/${name}/${regionState.towersRemaining}.png`;
     }
 </script>
 
 <svg version="1.0" viewBox={hungaryMapInfo.viewBox} {...$$restProps}>
     <g>
         {#each hungaryMapInfo.regions as regionInfo, i}
+            {@const regionState = regionStates[i]}
             <!-- svelte-ignore a11y-click-events-have-key-events -->
             <path
-                fill={getRegionColor(regionStates[i])}
+                fill={getRegionColor(regionState)}
                 d={regionInfo.path}
                 class="region stroke-black stroke-1 cursor-pointer"
                 on:click={() => onRegionClicked(i)}
             />
 
-            <image
-                href="logo_512.png"
-                width="50"
-                x={regionInfo.centerPos[0] - 25}
-                y={regionInfo.centerPos[1] - 25}
-            />
-
+            {#if regionState.type === "fort"}
+                <image
+                    in:fly={{
+                        y: -50,
+                        duration: 200,
+                        easing: (x) => x * x,
+                    }}
+                    out:fade={{ duration: 200 }}
+                    href={getFortImageUrl(regionStates[i])}
+                    width="60"
+                    x={regionInfo.centerPos[0] - 30}
+                    y={regionInfo.centerPos[1] - 35}
+                />
+            {:else if regionState.type === "marked"}
+                <image
+                    in:fly={{
+                        y: -50,
+                        duration: 200,
+                        easing: (x) => x * x,
+                    }}
+                    out:fade={{ duration: 200 }}
+                    href="logo_512.png"
+                    width="40"
+                    x={regionInfo.centerPos[0] - 20}
+                    y={regionInfo.centerPos[1] - 20}
+                />
+            {/if}
             <circle
                 cx={regionInfo.centerPos[0]}
                 cy={regionInfo.centerPos[1]}
                 r="5"
             />
-
-            {#each regionInfo.neighbours as nei}
-                {@const otherRegionInfo = hungaryMapInfo.regions.find(
-                    (x) => x.id == nei
-                )}
-                <line
-                    x1={regionInfo.centerPos[0]}
-                    y1={regionInfo.centerPos[1]}
-                    x2={otherRegionInfo?.centerPos[0]}
-                    y2={otherRegionInfo?.centerPos[1]}
-                    stroke="black"
-                />
-            {/each}
         {/each}
     </g>
     <g>

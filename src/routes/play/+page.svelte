@@ -2,11 +2,12 @@
     import InteractiveMap from "$lib/components/InteractiveMap.svelte";
     import QuestionPrompter from "$lib/components/QuestionPrompter.svelte";
     import { hungaryMapInfo } from "$lib/mapInfo";
-    import { gameStateSchema } from "$lib/state";
+    import { defaultGameState, gameStateSchema } from "$lib/state";
     import { gameState } from "$lib/stores";
     import { onMount } from "svelte";
     import { defaultGuessQuestion } from "$lib/question";
     import { assert } from "$lib/utils";
+    import { goto } from "$app/navigation";
     let questionPrompter: QuestionPrompter;
 
     onMount(() => {
@@ -144,5 +145,5 @@
     class="mx-auto w-2/3"
 />
 <div>Utoljára kattintott megye: {lastClicked}</div>
-
+<button on:click={() => ($gameState = defaultGameState())}>Újraindítás</button>
 <QuestionPrompter bind:this={questionPrompter} />

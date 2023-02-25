@@ -1,7 +1,6 @@
 <script lang="ts">
     import InteractiveMap from "$lib/components/InteractiveMap.svelte";
     import QuestionPrompter from "$lib/components/QuestionPrompter.svelte";
-    import { hungaryMapInfo } from "$lib/mapInfo";
     import { defaultGameState, gameStateSchema } from "$lib/state";
     import { gameState } from "$lib/stores";
     import { onMount } from "svelte";
@@ -22,16 +21,16 @@
         });
     });
 
-    let lastClicked = "";
-
     function onRegionClicked(index: number) {
-        lastClicked = hungaryMapInfo.regions[index].name;
         switch ($gameState.gameProgress.type) {
             case "bazisfoglalas":
                 handleBazisfoglalas(index);
                 break;
             case "terjeszkedes":
                 handleTerjeszkedes(index);
+                break;
+            case "terjeszkedes-kerdes":
+                alert("Indítsd el a kérdést a folytatáshoz");
                 break;
             case "felosztas":
                 break;
@@ -74,70 +73,47 @@
             type: "marked",
             ownerId: $gameState.gameProgress.player,
         };
-        // TODO: make sure that if the page reloads after having selected all the regions but before answering the question, show another question upon reload
-        if ($gameState.gameProgress.player === 2) {
-            questionPrompter.startGuess(
-                defaultGuessQuestion(),
-                [0, 1, 2],
-                (order) => {
-                    assert($gameState.gameProgress.type === "terjeszkedes");
-                    for (let i = 0; i < $gameState.regions.length; i++) {
-                        let region = $gameState.regions[i];
-                        if (region.type !== "marked") continue;
-                        let player = region.ownerId;
-                        $gameState.regions[i] = {
-                            type: "normal",
-                            ownerId: player,
-                            value: 200,
-                        };
-                        $gameState.gameProgress.player = 0;
-                        $gameState.gameProgress.round++;
-                    }
-                }
-            );
-        } else {
+        if ($gameState.gameProgress.player < 2) {
             $gameState.gameProgress.player++;
+        } else {
+            $gameState.gameProgress = {
+                type: "terjeszkedes-kerdes",
+                round: $gameState.gameProgress.round,
+            };
         }
     }
 
-    /*
-    function onRegionClicked(index: number) {
-        const regionStates = $gameState.regions;
-        let regionState = regionStates[index];
-        lastClicked = hungaryMapInfo.regions[index].name;
-        if (regionState.type === "empty") {
-            regionStates[index] = {
-                ownerId: currentPlayer,
-                type: "normal",
-                value: 300,
-            };
-            $gameState = $gameState;
-            cycleTurn();
-        } else {
-            if (regionState.ownerId === currentPlayer) {
-                alert("Ez a sajátod");
-            } else {
-                questionPrompter.startGuess(
-                    defaultGuessQuestion(),
-                    [currentPlayer, regionState.ownerId],
-                    (order) => {
-                        console.log(order);
-                        console.log(currentPlayer);
-                        if (currentPlayer == order[0]) {
-                            console.log("capturing");
-                            regionStates[index] = {
-                                ownerId: currentPlayer,
-                                type: "normal",
-                                value: 300,
-                            };
-                        }
-                        $gameState = $gameState;
-                        cycleTurn();
-                    }
-                );
+    function startTerjeszkedesKerdes() {
+        assert($gameState.gameProgress.type === "terjeszkedes-kerdes");
+        questionPrompter.startGuess(
+            defaultGuessQuestion(),
+            [0, 1, 2],
+            (order) => {
+                for (let i = 0; i < $gameState.regions.length; i++) {
+                    let region = $gameState.regions[i];
+                    if (region.type !== "marked") continue;
+                    let player = region.ownerId;
+                    $gameState.regions[i] = {
+                        type: "normal",
+                        ownerId: player,
+                        value: 200,
+                    };
+                }
+                assert($gameState.gameProgress.type === "terjeszkedes-kerdes");
+                if ($gameState.gameProgress.round < 5) {
+                    $gameState.gameProgress = {
+                        type: "terjeszkedes",
+                        player: 0,
+                        round: $gameState.gameProgress.round + 1,
+                    };
+                } else {
+                    $gameState.gameProgress = {
+                        type: "felosztas",
+                    };
+                }
             }
-        }
-    }*/
+        );
+    }
 </script>
 
 <InteractiveMap
@@ -145,6 +121,12 @@
     regionStates={$gameState.regions}
     class="mx-auto w-2/3"
 />
-<div>Utoljára kattintott megye: {lastClicked}</div>
+{#if $gameState.gameProgress.type === "terjeszkedes-kerdes"}
+    <div class="flex justify-center">
+        <button on:click={() => startTerjeszkedesKerdes()}>
+            Kérdés indítása
+        </button>
+    </div>
+{/if}
 <button on:click={() => ($gameState = defaultGameState())}>Újraindítás</button>
 <QuestionPrompter bind:this={questionPrompter} />

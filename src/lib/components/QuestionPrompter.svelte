@@ -7,6 +7,7 @@
         type ChoiceQuestion,
         type GuessQuestion,
     } from "$lib/question";
+    import { tick } from "svelte";
     import ChoiceQuestionInGame from "./ChoiceQuestionInGame.svelte";
 
     let currentChoiceQuestion = defaultChoiceQuestion();
@@ -50,8 +51,9 @@
             <ChoiceQuestionInGame
                 currentQuestion={currentChoiceQuestion}
                 {players}
-                onResult={(correct) => {
+                onResult={async (correct) => {
                     showQuestion = false;
+                    await tick();
                     choiceResultCallback(correct);
                 }}
             />
@@ -59,8 +61,9 @@
             <GuessQuestionInGame
                 currentQuestion={currentGuessQuestion}
                 {players}
-                onResult={(order) => {
+                onResult={async (order) => {
                     showQuestion = false;
+                    await tick();
                     guessResultCallback(order);
                 }}
             />

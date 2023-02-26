@@ -43,7 +43,11 @@
                 class="region stroke-black stroke-1 cursor-pointer"
                 on:click={() => onRegionClicked(i)}
             />
-
+        {/each}
+    </g>
+    <g class="pointer-events-none">
+        {#each hungaryMapInfo.regions as regionInfo, i}
+            {@const regionState = regionStates[i]}
             {#if regionState.type === "fort"}
                 <image
                     in:fly|local={flyParams}
@@ -62,12 +66,34 @@
                     x={regionInfo.centerPos[0] - 20}
                     y={regionInfo.centerPos[1] - 20}
                 />
+            {:else if regionState.type === "normal"}
+                <image
+                    in:fly|local={flyParams}
+                    out:fade|local={fadeParams}
+                    href="person-military-rifle.svg"
+                    width="30"
+                    x={regionInfo.centerPos[0] - 15}
+                    y={regionInfo.centerPos[1] - 20}
+                />
             {/if}
-            <circle
-                cx={regionInfo.centerPos[0]}
-                cy={regionInfo.centerPos[1]}
-                r="5"
-            />
+            {#if regionState.type === "fort" || regionState.type === "normal"}
+                <rect
+                    x={regionInfo.centerPos[0] - 30}
+                    y={regionInfo.centerPos[1] + 16}
+                    width="60"
+                    height="21"
+                    fill="white"
+                    stroke="black"
+                />
+                <text
+                    x={regionInfo.centerPos[0]}
+                    y={regionInfo.centerPos[1] + 28}
+                    dominant-baseline="middle"
+                    text-anchor="middle"
+                >
+                    {regionState.value}
+                </text>
+            {/if}
         {/each}
     </g>
     <g>

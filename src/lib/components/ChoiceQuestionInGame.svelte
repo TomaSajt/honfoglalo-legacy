@@ -82,7 +82,10 @@
                     <div class="text-center">
                         {questionIndexToLetter(i)}: {option}
                     </div>
-                    <div class="grid grid-cols-3">
+                    <div
+                        class="grid"
+                        style="grid-template-columns: repeat({players.length}, minmax(0, 1fr));"
+                    >
                         {#each players as player, j}
                             {@const selected = playerAnswers[j] === i}
                             <button

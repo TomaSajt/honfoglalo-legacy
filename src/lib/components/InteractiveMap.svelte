@@ -31,6 +31,18 @@
         let name = playerIdToStringId(regionState.player);
         return `fort/${name}/${regionState.towersRemaining}.png`;
     }
+
+    function getArmyImageUrl(regionState: RegionState) {
+        assert(regionState.type === "normal");
+        let name = playerIdToStringId(regionState.player);
+        return `army/${name}.svg`;
+    }
+
+    function getMarkerImageUrl(regionState: RegionState) {
+        assert(regionState.type === "marked");
+        let name = playerIdToStringId(regionState.player);
+        return `marker/${name}.svg`;
+    }
 </script>
 
 <svg version="1.0" viewBox={hungaryMapInfo.viewBox} {...$$restProps}>
@@ -62,20 +74,22 @@
                 <image
                     in:fly|local={flyParams}
                     out:fade|local={fadeParams}
-                    href="logo_512.png"
+                    href={getMarkerImageUrl(regionState)}
                     width="40"
                     x={regionInfo.centerPos[0] - 20}
                     y={regionInfo.centerPos[1] - 20}
                 />
             {:else if regionState.type === "normal"}
-                <image
-                    in:fly|local={flyParams}
-                    out:fade|local={fadeParams}
-                    href="person-military-rifle.svg"
-                    width="30"
-                    x={regionInfo.centerPos[0] - 15}
-                    y={regionInfo.centerPos[1] - 20}
-                />
+                <g color="red">
+                    <image
+                        in:fly|local={flyParams}
+                        out:fade|local={fadeParams}
+                        href={getArmyImageUrl(regionState)}
+                        width="30"
+                        x={regionInfo.centerPos[0] - 15}
+                        y={regionInfo.centerPos[1] - 20}
+                    />
+                </g>
             {/if}
             {#if regionState.type === "fort" || regionState.type === "normal"}
                 <rect

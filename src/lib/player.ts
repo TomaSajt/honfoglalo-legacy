@@ -15,7 +15,7 @@ export function playerIdToStringId(id: number) {
 export function playerIdToStrongCssColor(id: number) {
     if (id == 0) return "#af0000";
     if (id == 1) return "#00af00";
-    if (id == 2) return "#0000ff";
+    if (id == 2) return "#0000af";
     throw new Error("Invalid player id");
 }
 

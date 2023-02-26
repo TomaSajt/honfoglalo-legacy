@@ -61,7 +61,11 @@ const haboruSchema = z.object({
     round: z.number().int().min(0).max(5)
 });
 
-const gameProgressScema = z.discriminatedUnion('type', [bazisfoglalasSchema, terjeszkedesSchema, terjeszkedesKerdesSchema, felosztasKerdesSchema, felosztasSchema, haboruSchema]);
+const gameOverSchema = z.object({
+    type: z.literal("game-over"),
+});
+
+const gameProgressScema = z.discriminatedUnion('type', [bazisfoglalasSchema, terjeszkedesSchema, terjeszkedesKerdesSchema, felosztasKerdesSchema, felosztasSchema, haboruSchema, gameOverSchema]);
 
 export const gameStateSchema = z.object({
     regions: z.array(regionSchema),

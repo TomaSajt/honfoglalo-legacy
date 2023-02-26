@@ -60,6 +60,7 @@
                 handleFelosztas(index);
                 break;
             case "haboru":
+                handleHaboru(index);
                 break;
         }
     }
@@ -162,6 +163,36 @@
         }
     }
 
+    function handleHaboru(index: number) {
+        let region = $gameState.regions[index];
+        assert(region.type === "normal" || region.type === "fort");
+        if (region.type === "normal") handleHaboruNormal(index);
+        else handleHaboruNormal(index);
+    }
+
+    function handleHaboruNormal(index: number) {
+        let region = $gameState.regions[index];
+        assert($gameState.gameProgress.type === "haboru");
+        assert(region.type === "normal");
+        let round = $gameState.gameProgress.round;
+        let playerOrderIndex = $gameState.gameProgress.playerOrderIndex;
+        let player = playerOrders[round][playerOrderIndex];
+
+        let neigbourIndices = getPlayerReachableRegionIndices(player);
+
+        if (!neigbourIndices.includes(index)) {
+            alert(
+                "Csak az elfoglalt területeddel szomszédos vármegyéket támadhatodmeg"
+            );
+            return;
+        }
+        if (region.player === player) {
+            alert("Csak más által birtokolt területet támadhatsz meg");
+            return;
+        }
+        startHaboruKerdesNormalFeleletvalasztos(index);
+    }
+
     function startTerjeszkedesKerdes() {
         assert($gameState.gameProgress.type === "terjeszkedes-kerdes");
         questionPrompter.startChoice(
@@ -217,6 +248,51 @@
         );
     }
 
+    function startHaboruKerdesNormalFeleletvalasztos(index: number) {
+        let region = $gameState.regions[index];
+        assert($gameState.gameProgress.type === "haboru");
+        assert(region.type === "normal");
+        let round = $gameState.gameProgress.round;
+        let playerOrderIndex = $gameState.gameProgress.playerOrderIndex;
+        let attacker = playerOrders[round][playerOrderIndex];
+        let defender = region.player;
+        questionPrompter.startChoice(
+            defaultChoiceQuestion(),
+            [attacker, defender],
+            (correct) => {
+                assert($gameState.gameProgress.type === "haboru");
+                if (correct.length == 2) {
+                    // TODO: haboru kerdes normal tipp
+                    return;
+                }
+                if (correct.length == 1) {
+                    let winner = correct[0];
+                    if (winner === attacker) {
+                        $gameState.regions[index] = {
+                            type: "normal",
+                            player: attacker,
+                            value: 400,
+                        };
+                    } else {
+                        // TODO: add bonus 100 score to defender
+                    }
+                }
+                if ($gameState.gameProgress.playerOrderIndex < 2)
+                    $gameState.gameProgress.playerOrderIndex++;
+                else {
+                    $gameState.gameProgress.playerOrderIndex = 0;
+                    if ($gameState.gameProgress.round < 5)
+                        $gameState.gameProgress.round++;
+                    else {
+                        $gameState.gameProgress = {
+                            type: "game-over",
+                        };
+                    }
+                }
+            }
+        );
+    }
+
     function getPlayerReachableRegionIndices(player: number) {
         function getNeighbourIndices(index: number) {
             let regionInfo = hungaryMapInfo.regions[index];
@@ -231,10 +307,10 @@
             if (regionState.player !== player) continue;
             playerRegionIndices.push(i);
         }
-        let neighbourIndiciesSet = new Set(
+        let neighbourIndicesSet = new Set(
             playerRegionIndices.flatMap((i) => [i, ...getNeighbourIndices(i)])
         );
-        return [...neighbourIndiciesSet];
+        return [...neighbourIndicesSet];
     }
 </script>
 

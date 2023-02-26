@@ -8,13 +8,14 @@
     import { assert } from "$lib/utils";
     import {
         playerIdToHungarianName,
+        playerIdToStrongCssColor,
         playerIdToWeakCssColor,
     } from "$lib/player";
     import { getRegionIndexFromId, hungaryMapInfo } from "$lib/mapInfo";
 
     let questionPrompter: QuestionPrompter;
 
-    let terjeszkedesPlayerOrders = [
+    let playerOrders = [
         [0, 1, 2],
         [1, 2, 0],
         [2, 0, 1],
@@ -96,7 +97,7 @@
         let round = $gameState.gameProgress.round;
         let playerOrderIndex = $gameState.gameProgress.playerOrderIndex;
 
-        let player = terjeszkedesPlayerOrders[round][playerOrderIndex];
+        let player = playerOrders[round][playerOrderIndex];
         let neigbourIndices = getPlayerReachableRegionIndices(player);
         let bypassNeighbourConstraint =
             neigbourIndices.filter(
@@ -155,6 +156,7 @@
         } else {
             $gameState.gameProgress = {
                 type: "haboru",
+                playerOrderIndex: 0,
                 round: 0,
             };
         }
@@ -263,19 +265,24 @@
     </div>
 {/if}
 
-{#if $gameState.gameProgress.type === "terjeszkedes" || $gameState.gameProgress.type === "terjeszkedes-kerdes"}
+{#if $gameState.gameProgress.type === "terjeszkedes" || $gameState.gameProgress.type === "terjeszkedes-kerdes" || $gameState.gameProgress.type === "haboru"}
     <div class="flex gap-2 justify-center">
-        {#each terjeszkedesPlayerOrders as order, i}
+        {#each playerOrders as order, i}
             <div
-                class="flex outline-black"
+                class="flex outline-black -outline-offset-1 outline-2"
                 class:outline={$gameState.gameProgress.round === i}
             >
-                {#each order as player}
+                {#each order as player, j}
+                    {@const isCurrent =
+                        $gameState.gameProgress.round === i &&
+                        $gameState.gameProgress.type !==
+                            "terjeszkedes-kerdes" &&
+                        $gameState.gameProgress.playerOrderIndex === j}
                     <div
                         class="w-4 h-4"
-                        style="background-color: {playerIdToWeakCssColor(
-                            player
-                        )};"
+                        style="background-color: {isCurrent
+                            ? playerIdToStrongCssColor(player)
+                            : playerIdToWeakCssColor(player)};"
                     />
                 {/each}
             </div>

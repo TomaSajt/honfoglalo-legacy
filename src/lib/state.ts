@@ -57,7 +57,8 @@ const felosztasSchema = z.object({
 
 const haboruSchema = z.object({
     type: z.literal("haboru"),
-    round: z.number().int().min(0).max(17)
+    playerOrderIndex: z.number().int().min(0).max(2),
+    round: z.number().int().min(0).max(5)
 });
 
 const gameProgressScema = z.discriminatedUnion('type', [bazisfoglalasSchema, terjeszkedesSchema, terjeszkedesKerdesSchema, felosztasKerdesSchema, felosztasSchema, haboruSchema]);

@@ -38,24 +38,29 @@ const bazisfoglalasSchema = z.object({
 const terjeszkedesSchema = z.object({
     type: z.literal("terjeszkedes"),
     playerOrderIndex: z.number().int().min(0).max(2),
-    round: z.number().min(0).max(5)
+    round: z.number().int().min(0).max(5)
 });
 
 const terjeszkedesKerdesSchema = z.object({
     type: z.literal("terjeszkedes-kerdes"),
-    round: z.number().min(0).max(5)
+    round: z.number().int().min(0).max(5)
+});
+
+const felosztasKerdesSchema = z.object({
+    type: z.literal("felosztas-kerdes"),
 });
 
 const felosztasSchema = z.object({
     type: z.literal("felosztas"),
+    player: z.number().int().min(0).max(2)
 });
 
 const haboruSchema = z.object({
     type: z.literal("haboru"),
-    round: z.number().min(0).max(17)
+    round: z.number().int().min(0).max(17)
 });
 
-const gameProgressScema = z.discriminatedUnion('type', [bazisfoglalasSchema, terjeszkedesSchema, terjeszkedesKerdesSchema, felosztasSchema, haboruSchema]);
+const gameProgressScema = z.discriminatedUnion('type', [bazisfoglalasSchema, terjeszkedesSchema, terjeszkedesKerdesSchema, felosztasKerdesSchema, felosztasSchema, haboruSchema]);
 
 export const gameStateSchema = z.object({
     regions: z.array(regionSchema),

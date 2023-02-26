@@ -4,9 +4,12 @@
     import { defaultGameState, gameStateSchema } from "$lib/state";
     import { gameState } from "$lib/stores";
     import { onMount } from "svelte";
-    import { defaultChoiceQuestion } from "$lib/question";
+    import { defaultChoiceQuestion, defaultGuessQuestion } from "$lib/question";
     import { assert } from "$lib/utils";
-    import { playerIdToWeakCssColor } from "$lib/player";
+    import {
+        playerIdToHungarianName,
+        playerIdToWeakCssColor,
+    } from "$lib/player";
     import { getRegionIndexFromId, hungaryMapInfo } from "$lib/mapInfo";
 
     let questionPrompter: QuestionPrompter;
@@ -49,7 +52,11 @@
             case "terjeszkedes-kerdes":
                 alert("Indítsd el a kérdést a folytatáshoz");
                 break;
+            case "felosztas-kerdes":
+                alert("Indítsd el a kérdést a folytatáshoz");
+                break;
             case "felosztas":
+                handleFelosztas(index);
                 break;
             case "haboru":
                 break;
@@ -97,7 +104,7 @@
             ).length === 0;
         if (!bypassNeighbourConstraint && !neigbourIndices.includes(index)) {
             alert(
-                "Csak az elfoglalt területeddel szomszédos területeket jelölhetsz meg"
+                "Csak az elfoglalt területeddel szomszédos vármegyéket jelölhetsz meg"
             );
             return;
         }
@@ -111,6 +118,44 @@
             $gameState.gameProgress = {
                 type: "terjeszkedes-kerdes",
                 round: $gameState.gameProgress.round,
+            };
+        }
+    }
+
+    function handleFelosztas(index: number) {
+        assert($gameState.gameProgress.type === "felosztas");
+        if ($gameState.regions[index].type !== "empty") {
+            alert("Csak szabad vármegyéket jelölhetsz meg");
+            return;
+        }
+
+        let player = $gameState.gameProgress.player;
+        let neigbourIndices = getPlayerReachableRegionIndices(player);
+        let bypassNeighbourConstraint =
+            neigbourIndices.filter(
+                (i) => $gameState.regions[i].type === "empty"
+            ).length === 0;
+        if (!bypassNeighbourConstraint && !neigbourIndices.includes(index)) {
+            alert(
+                "Csak az elfoglalt területeddel szomszédos vármegyéket jelölhetsz meg"
+            );
+            return;
+        }
+
+        $gameState.regions[index] = {
+            type: "normal",
+            value: 300,
+            player: player,
+        };
+
+        if ($gameState.regions.filter((x) => x.type === "empty").length !== 0) {
+            $gameState.gameProgress = {
+                type: "felosztas-kerdes",
+            };
+        } else {
+            $gameState.gameProgress = {
+                type: "haboru",
+                round: 0,
             };
         }
     }
@@ -148,9 +193,24 @@
                     };
                 } else {
                     $gameState.gameProgress = {
-                        type: "felosztas",
+                        type: "felosztas-kerdes",
                     };
                 }
+            }
+        );
+    }
+
+    function startFelosztasKerdes() {
+        assert($gameState.gameProgress.type === "felosztas-kerdes");
+        questionPrompter.startGuess(
+            defaultGuessQuestion(),
+            [0, 1, 2],
+            (order) => {
+                assert($gameState.gameProgress.type === "felosztas-kerdes");
+                $gameState.gameProgress = {
+                    type: "felosztas",
+                    player: order[0],
+                };
             }
         );
     }
@@ -184,8 +244,22 @@
 {#if $gameState.gameProgress.type === "terjeszkedes-kerdes"}
     <div class="flex justify-center">
         <button on:click={() => startTerjeszkedesKerdes()}>
-            Kérdés indítása
+            Kérdés indítása (terjeszkedés)
         </button>
+    </div>
+{/if}
+
+{#if $gameState.gameProgress.type === "felosztas-kerdes"}
+    <div class="flex justify-center">
+        <button on:click={() => startFelosztasKerdes()}>
+            Kérdés indítása (felosztás)
+        </button>
+    </div>
+{/if}
+
+{#if $gameState.gameProgress.type === "felosztas"}
+    <div class="text-center">
+        {playerIdToHungarianName($gameState.gameProgress.player)} választ
     </div>
 {/if}
 

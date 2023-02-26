@@ -7,6 +7,8 @@
     import { defaultChoiceQuestion } from "$lib/question";
     import { assert } from "$lib/utils";
     import { playerIdToWeakCssColor } from "$lib/player";
+    import { getRegionIndexFromId, hungaryMapInfo } from "$lib/mapInfo";
+
     let questionPrompter: QuestionPrompter;
 
     let terjeszkedesPlayerOrders = [
@@ -86,7 +88,19 @@
         }
         let round = $gameState.gameProgress.round;
         let playerOrderIndex = $gameState.gameProgress.playerOrderIndex;
+
         let player = terjeszkedesPlayerOrders[round][playerOrderIndex];
+        let neigbourIndices = getPlayerReachableRegionIndices(player);
+        let bypassNeighbourConstraint =
+            neigbourIndices.filter(
+                (i) => $gameState.regions[i].type === "empty"
+            ).length === 0;
+        if (!bypassNeighbourConstraint && !neigbourIndices.includes(index)) {
+            alert(
+                "Csak az elfoglalt területeddel szomszédos területeket jelölhetsz meg"
+            );
+            return;
+        }
         $gameState.regions[index] = {
             type: "marked",
             player: player,
@@ -139,6 +153,26 @@
                 }
             }
         );
+    }
+
+    function getPlayerReachableRegionIndices(player: number) {
+        function getNeighbourIndices(index: number) {
+            let regionInfo = hungaryMapInfo.regions[index];
+            return regionInfo.neighbours.map((id) => getRegionIndexFromId(id));
+        }
+
+        let playerRegionIndices: number[] = [];
+        for (let i = 0; i < hungaryMapInfo.regions.length; i++) {
+            let regionState = $gameState.regions[i];
+            if (regionState.type !== "fort" && regionState.type !== "normal")
+                continue;
+            if (regionState.player !== player) continue;
+            playerRegionIndices.push(i);
+        }
+        let neighbourIndiciesSet = new Set(
+            playerRegionIndices.flatMap((i) => [i, ...getNeighbourIndices(i)])
+        );
+        return [...neighbourIndiciesSet];
     }
 </script>
 

@@ -41,7 +41,7 @@ const terjeszkedesSchema = z.object({
     round: z.number().min(0).max(5)
 });
 
-const postTerjeszkedesSchema = z.object({
+const terjeszkedesKerdesSchema = z.object({
     type: z.literal("terjeszkedes-kerdes"),
     round: z.number().min(0).max(5)
 });
@@ -55,7 +55,7 @@ const haboruSchema = z.object({
     round: z.number().min(0).max(17)
 });
 
-const gameProgressScema = z.discriminatedUnion('type', [bazisfoglalasSchema, terjeszkedesSchema, postTerjeszkedesSchema, felosztasSchema, haboruSchema]);
+const gameProgressScema = z.discriminatedUnion('type', [bazisfoglalasSchema, terjeszkedesSchema, terjeszkedesKerdesSchema, felosztasSchema, haboruSchema]);
 
 export const gameStateSchema = z.object({
     regions: z.array(regionSchema),

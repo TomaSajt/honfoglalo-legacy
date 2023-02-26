@@ -4,6 +4,7 @@
         playerIdToWeakCssColor,
     } from "$lib/player";
     import type { ChoiceQuestion } from "$lib/question";
+    import { assert } from "$lib/utils";
     import { onMount } from "svelte";
 
     export let currentQuestion: ChoiceQuestion;
@@ -45,8 +46,10 @@
     }
 
     function submitResult() {
-        if (!resultCorrectPlayers)
-            throw new Error("Only call this when resultOrder is not null");
+        assert(
+            !!resultCorrectPlayers,
+            "Only call this when resultOrder is not null"
+        );
         onResult(resultCorrectPlayers);
     }
 
@@ -55,8 +58,8 @@
     }
 </script>
 
-<div class="p-4 w-2/3 mx-auto">
-    <div class="mx-auto flex flex-col bg-slate-400 p-4 gap-4 rounded-lg">
+<div class="p-4 max-w-[40rem] w-full mx-auto">
+    <div class="flex flex-col bg-slate-400 p-4 gap-4 rounded-lg">
         <div class="text-center text-lg uppercase font-bold tracking">
             Tippelős kérdés
         </div>

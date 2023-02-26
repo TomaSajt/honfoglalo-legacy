@@ -1,6 +1,7 @@
 <script lang="ts">
     import { playerIdToHungarianName } from "$lib/player";
     import type { GuessQuestion } from "$lib/question";
+    import { assert } from "$lib/utils";
     import { onMount } from "svelte";
 
     export let currentQuestion: GuessQuestion;
@@ -43,16 +44,13 @@
     }
 
     function submitResult() {
-        if (!resultOrder)
-            throw new Error("Only call this when resultOrder is not null");
+        assert(!!resultOrder, "Only call this when resultOrder is not null");
         onResult(resultOrder);
     }
 </script>
 
-<div class="p-4 max-w-2xl mx-auto">
-    <div
-        class="min-w-fit mx-auto flex flex-col bg-slate-400 p-4 gap-4 rounded-lg"
-    >
+<div class="p-4 max-w-[40rem] w-full mx-auto">
+    <div class="flex flex-col bg-slate-400 p-4 gap-4 rounded-lg">
         <div class="text-center text-lg uppercase font-bold tracking">
             Tippelős kérdés
         </div>

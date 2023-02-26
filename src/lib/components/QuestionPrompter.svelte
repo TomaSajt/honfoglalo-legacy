@@ -1,35 +1,69 @@
 <script lang="ts">
     import GuessQuestionInGame from "$lib/components/GuessQuestionInGame.svelte";
     import ScreenOverlay from "$lib/components/ScreenOverlay.svelte";
-    import { defaultGuessQuestion, type GuessQuestion } from "$lib/question";
+    import {
+        defaultChoiceQuestion,
+        defaultGuessQuestion,
+        type ChoiceQuestion,
+        type GuessQuestion,
+    } from "$lib/question";
+    import ChoiceQuestionInGame from "./ChoiceQuestionInGame.svelte";
 
-    let currentQuestion = defaultGuessQuestion();
+    let currentChoiceQuestion = defaultChoiceQuestion();
+    let currentGuessQuestion = defaultGuessQuestion();
+    let isChoiceQuestion = false;
+
     let showQuestion = false;
 
     let players: number[] = [];
-    let resultCallback: (order: number[]) => any = () => {};
+    let guessResultCallback: (order: number[]) => any = () => {};
+    let choiceResultCallback: (correctPlayers: number[]) => any = () => {};
+
+    export function startChoice(
+        question: ChoiceQuestion,
+        playerList: number[],
+        cb: (correctPlayers: number[]) => any = () => {}
+    ) {
+        currentChoiceQuestion = question;
+        players = playerList;
+        choiceResultCallback = cb;
+        isChoiceQuestion = true;
+        showQuestion = true;
+    }
 
     export function startGuess(
         question: GuessQuestion,
         playerList: number[],
         cb: (order: number[]) => any
     ) {
-        currentQuestion = question;
+        currentGuessQuestion = question;
         players = playerList;
-        resultCallback = cb;
+        guessResultCallback = cb;
+        isChoiceQuestion = false;
         showQuestion = true;
     }
 </script>
 
 {#if showQuestion}
     <ScreenOverlay>
-        <GuessQuestionInGame
-            {currentQuestion}
-            {players}
-            onResult={(order) => {
-                showQuestion = false;
-                resultCallback(order);
-            }}
-        />
+        {#if isChoiceQuestion}
+            <ChoiceQuestionInGame
+                currentQuestion={currentChoiceQuestion}
+                {players}
+                onResult={(correct) => {
+                    showQuestion = false;
+                    choiceResultCallback(correct);
+                }}
+            />
+        {:else}
+            <GuessQuestionInGame
+                currentQuestion={currentGuessQuestion}
+                {players}
+                onResult={(order) => {
+                    showQuestion = false;
+                    guessResultCallback(order);
+                }}
+            />
+        {/if}
     </ScreenOverlay>
 {/if}

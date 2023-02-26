@@ -4,7 +4,7 @@
     import { defaultGameState, gameStateSchema } from "$lib/state";
     import { gameState } from "$lib/stores";
     import { onMount } from "svelte";
-    import { defaultGuessQuestion } from "$lib/question";
+    import { defaultChoiceQuestion, defaultGuessQuestion } from "$lib/question";
     import { assert } from "$lib/utils";
     let questionPrompter: QuestionPrompter;
 
@@ -85,21 +85,26 @@
 
     function startTerjeszkedesKerdes() {
         assert($gameState.gameProgress.type === "terjeszkedes-kerdes");
-        questionPrompter.startGuess(
-            defaultGuessQuestion(),
+        questionPrompter.startChoice(
+            defaultChoiceQuestion(),
             [0, 1, 2],
-            (order) => {
+            (correct) => {
+                assert($gameState.gameProgress.type === "terjeszkedes-kerdes");
                 for (let i = 0; i < $gameState.regions.length; i++) {
                     let region = $gameState.regions[i];
                     if (region.type !== "marked") continue;
-                    let player = region.ownerId;
-                    $gameState.regions[i] = {
-                        type: "normal",
-                        ownerId: player,
-                        value: 200,
-                    };
+                    if (correct.includes(region.ownerId)) {
+                        $gameState.regions[i] = {
+                            type: "normal",
+                            ownerId: region.ownerId,
+                            value: 200,
+                        };
+                    } else {
+                        $gameState.regions[i] = {
+                            type: "empty",
+                        };
+                    }
                 }
-                assert($gameState.gameProgress.type === "terjeszkedes-kerdes");
                 if ($gameState.gameProgress.round < 5) {
                     $gameState.gameProgress = {
                         type: "terjeszkedes",
@@ -129,4 +134,5 @@
     </div>
 {/if}
 <button on:click={() => ($gameState = defaultGameState())}>Újraindítás</button>
+<div>$gameState.gameProgress.type: {$gameState.gameProgress.type}</div>
 <QuestionPrompter bind:this={questionPrompter} />

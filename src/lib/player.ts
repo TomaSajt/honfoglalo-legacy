@@ -12,6 +12,13 @@ export function playerIdToStringId(id: number) {
     throw new Error("Invalid player id");
 }
 
+export function playerIdToStrongCssColor(id: number) {
+    if (id == 0) return "#af0000";
+    if (id == 1) return "#00af00";
+    if (id == 2) return "#0000ff";
+    throw new Error("Invalid player id");
+}
+
 export function playerIdToWeakCssColor(id: number) {
     if (id == 0) return "#fca5a5";
     if (id == 1) return "#86efac";

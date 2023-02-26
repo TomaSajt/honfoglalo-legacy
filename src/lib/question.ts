@@ -38,17 +38,17 @@ export function parseQuestionFromJsonText(text: string): Question | null {
 export function defaultChoiceQuestion(): ChoiceQuestion {
     return {
         type: "choice",
-        question: "Mi a válasz?",
-        options: ["Válasz A", "Válasz B", "Válasz C", "Válasz D"],
-        correctIndex: 0,
-        timeLimit: 120,
+        question: "Hányan dolgoztak a Honfoglaló Legacy-n?",
+        options: ["1", "2", "3", "4"],
+        correctIndex: 2,
+        timeLimit: 20,
     };
 }
 export function defaultGuessQuestion(): GuessQuestion {
     return {
         type: "guess",
-        question: "Mennyi 1+1",
-        solution: 2,
-        timeLimit: 10,
+        question: "Mikor készült a Honfoglaló Legacy?",
+        solution: 2023,
+        timeLimit: 20,
     };
 }

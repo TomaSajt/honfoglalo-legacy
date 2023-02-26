@@ -49,16 +49,18 @@
             throw new Error("Only call this when resultOrder is not null");
         onResult(resultCorrectPlayers);
     }
+
+    function questionIndexToLetter(index: number) {
+        return "ABCD"[index];
+    }
 </script>
 
-<div class="p-4 max-w-2xl mx-auto">
-    <div
-        class="min-w-fit mx-auto flex flex-col bg-slate-400 p-4 gap-4 rounded-lg"
-    >
+<div class="p-4 w-2/3 mx-auto">
+    <div class="mx-auto flex flex-col bg-slate-400 p-4 gap-4 rounded-lg">
         <div class="text-center text-lg uppercase font-bold tracking">
             Tippelős kérdés
         </div>
-        <div>{currentQuestion.question}</div>
+        <div class="text-center">{currentQuestion.question}</div>
         <div class="flex gap-2">
             <div>Hátralévő idő:</div>
             <div>{remainingTime}</div>
@@ -74,8 +76,8 @@
                     class:outline-green-800={showCorrect && correct}
                     class:outline-red-800={showCorrect && !correct}
                 >
-                    <div class="w-max">
-                        {option}
+                    <div class="text-center">
+                        {questionIndexToLetter(i)}: {option}
                     </div>
                     <div class="grid grid-cols-3">
                         {#each players as player, j}

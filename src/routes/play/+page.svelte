@@ -6,6 +6,7 @@
     import { onMount } from "svelte";
     import { defaultChoiceQuestion } from "$lib/question";
     import { assert } from "$lib/utils";
+    import { playerIdToWeakCssColor } from "$lib/player";
     let questionPrompter: QuestionPrompter;
 
     let terjeszkedesPlayerOrders = [
@@ -122,7 +123,10 @@
                         };
                     }
                 }
-                if ($gameState.gameProgress.round < 5) {
+                let skipToFelosztas =
+                    $gameState.regions.filter((x) => x.type === "empty")
+                        .length < 3;
+                if (!skipToFelosztas && $gameState.gameProgress.round < 5) {
                     $gameState.gameProgress = {
                         type: "terjeszkedes",
                         playerOrderIndex: 0,
@@ -150,6 +154,27 @@
         </button>
     </div>
 {/if}
+
+{#if $gameState.gameProgress.type === "terjeszkedes" || $gameState.gameProgress.type === "terjeszkedes-kerdes"}
+    <div class="flex gap-2 justify-center">
+        {#each terjeszkedesPlayerOrders as order, i}
+            <div
+                class="flex outline-black"
+                class:outline={$gameState.gameProgress.round === i}
+            >
+                {#each order as player}
+                    <div
+                        class="w-4 h-4"
+                        style="background-color: {playerIdToWeakCssColor(
+                            player
+                        )};"
+                    />
+                {/each}
+            </div>
+        {/each}
+    </div>
+{/if}
+
 <button on:click={() => ($gameState = defaultGameState())}>Újraindítás</button>
 <div>$gameState.gameProgress.type: {$gameState.gameProgress.type}</div>
 <QuestionPrompter bind:this={questionPrompter} />

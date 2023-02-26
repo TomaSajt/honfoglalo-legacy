@@ -4,9 +4,18 @@
     import { defaultGameState, gameStateSchema } from "$lib/state";
     import { gameState } from "$lib/stores";
     import { onMount } from "svelte";
-    import { defaultChoiceQuestion, defaultGuessQuestion } from "$lib/question";
+    import { defaultChoiceQuestion } from "$lib/question";
     import { assert } from "$lib/utils";
     let questionPrompter: QuestionPrompter;
+
+    let terjeszkedesPlayerOrders = [
+        [0, 1, 2],
+        [1, 2, 0],
+        [2, 0, 1],
+        [0, 2, 1],
+        [1, 0, 2],
+        [2, 1, 0],
+    ];
 
     onMount(() => {
         let gameStateString = localStorage.getItem("gameState");
@@ -17,7 +26,12 @@
         }
 
         gameState.subscribe((newState) => {
-            localStorage.setItem("gameState", JSON.stringify(newState));
+            let res = gameStateSchema.safeParse(newState);
+            if (res.success) {
+                localStorage.setItem("gameState", JSON.stringify(newState));
+            } else {
+                alert("Hibás játékállapot: " + res.error);
+            }
         });
     });
 
@@ -47,7 +61,7 @@
         }
         let currentPlayer = $gameState.gameProgress.player;
         $gameState.regions[index] = {
-            ownerId: currentPlayer,
+            player: currentPlayer,
             type: "fort",
             towersRemaining: 3,
             value: 1000,
@@ -55,7 +69,7 @@
         if ($gameState.gameProgress.player === 2) {
             $gameState.gameProgress = {
                 type: "terjeszkedes",
-                player: 0,
+                playerOrderIndex: 0,
                 round: 0,
             };
         } else {
@@ -69,12 +83,15 @@
             alert("Csak szabad vármegyéket jelölhetsz meg");
             return;
         }
+        let round = $gameState.gameProgress.round;
+        let playerOrderIndex = $gameState.gameProgress.playerOrderIndex;
+        let player = terjeszkedesPlayerOrders[round][playerOrderIndex];
         $gameState.regions[index] = {
             type: "marked",
-            ownerId: $gameState.gameProgress.player,
+            player: player,
         };
-        if ($gameState.gameProgress.player < 2) {
-            $gameState.gameProgress.player++;
+        if ($gameState.gameProgress.playerOrderIndex < 2) {
+            $gameState.gameProgress.playerOrderIndex++;
         } else {
             $gameState.gameProgress = {
                 type: "terjeszkedes-kerdes",
@@ -93,10 +110,10 @@
                 for (let i = 0; i < $gameState.regions.length; i++) {
                     let region = $gameState.regions[i];
                     if (region.type !== "marked") continue;
-                    if (correct.includes(region.ownerId)) {
+                    if (correct.includes(region.player)) {
                         $gameState.regions[i] = {
                             type: "normal",
-                            ownerId: region.ownerId,
+                            player: region.player,
                             value: 200,
                         };
                     } else {
@@ -108,7 +125,7 @@
                 if ($gameState.gameProgress.round < 5) {
                     $gameState.gameProgress = {
                         type: "terjeszkedes",
-                        player: 0,
+                        playerOrderIndex: 0,
                         round: $gameState.gameProgress.round + 1,
                     };
                 } else {

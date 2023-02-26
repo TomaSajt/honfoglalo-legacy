@@ -22,12 +22,12 @@
     function getRegionColor(regionState: RegionState) {
         if (regionState.type === "empty" || regionState.type === "marked")
             return "white";
-        return playerIdToWeakCssColor(regionState.ownerId);
+        return playerIdToWeakCssColor(regionState.player);
     }
 
     function getFortImageUrl(regionState: RegionState) {
         assert(regionState.type === "fort");
-        let name = playerIdToStringId(regionState.ownerId);
+        let name = playerIdToStringId(regionState.player);
         return `fort/${name}/${regionState.towersRemaining}.png`;
     }
 </script>

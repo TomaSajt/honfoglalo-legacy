@@ -1,23 +1,20 @@
 import { z } from "zod";
 import { hungaryMapInfo } from "./mapInfo";
 
-
-const playerSchema = z.number().int().min(0).max(2);
-
 const fortRegionSchema = z.object({
     type: z.literal("fort"),
-    ownerId: playerSchema,
+    player: z.number().int().min(0).max(2),
     towersRemaining: z.number().int().min(0).max(3),
     value: z.number().int()
 });
 const normalRegionSchema = z.object({
     type: z.literal("normal"),
-    ownerId: playerSchema,
+    player: z.number().int().min(0).max(2),
     value: z.number().int()
 });
 const markedRegionSchema = z.object({
     type: z.literal("marked"),
-    ownerId: playerSchema
+    player: z.number().int().min(0).max(2)
 });
 const emptyRegionSchema = z.object({
     type: z.literal("empty")
@@ -35,12 +32,12 @@ const regionSchema = z.discriminatedUnion('type', [
 
 const bazisfoglalasSchema = z.object({
     type: z.literal("bazisfoglalas"),
-    player: playerSchema
+    player: z.number().int().min(0).max(2)
 });
 
 const terjeszkedesSchema = z.object({
     type: z.literal("terjeszkedes"),
-    player: playerSchema,
+    playerOrderIndex: z.number().int().min(0).max(2),
     round: z.number().min(0).max(5)
 });
 

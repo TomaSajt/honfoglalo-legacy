@@ -27,6 +27,7 @@
 
     function getFortImageUrl(regionState: RegionState) {
         assert(regionState.type === "fort");
+        if (regionState.towersRemaining === 0) return "fort/destroyed.png";
         let name = playerIdToStringId(regionState.player);
         return `fort/${name}/${regionState.towersRemaining}.png`;
     }

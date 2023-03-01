@@ -41,7 +41,7 @@
     function getMarkerImageUrl(regionState: RegionState) {
         assert(regionState.type === "marked");
         let name = playerIdToStringId(regionState.player);
-        return `marker/${name}.svg`;
+        return `marker/${name}.png`;
     }
 </script>
 

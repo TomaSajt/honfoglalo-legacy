@@ -437,6 +437,10 @@
     }
 </script>
 
+<nav class="px-3 pt-3">
+    <a class="bg-white hover:bg-slate-300" href="/">Főmenü</a>
+</nav>
+
 <InteractiveMap
     {onRegionClicked}
     regionStates={$gameState.regions}

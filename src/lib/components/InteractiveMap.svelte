@@ -41,7 +41,7 @@
     function getMarkerImageUrl(regionState: RegionState) {
         assert(regionState.type === "marked");
         let name = playerIdToStringId(regionState.player);
-        return `marker/${name}.svg`;
+        return `marker/${name}.png`;
     }
 </script>
 
@@ -75,9 +75,9 @@
                     in:fly|local={flyParams}
                     out:fade|local={fadeParams}
                     href={getMarkerImageUrl(regionState)}
-                    width="40"
-                    x={regionInfo.centerPos[0] - 20}
-                    y={regionInfo.centerPos[1] - 20}
+                    width="80"
+                    x={regionInfo.centerPos[0] - 40}
+                    y={regionInfo.centerPos[1] - 40}
                 />
             {:else if regionState.type === "normal"}
                 <g color="red">

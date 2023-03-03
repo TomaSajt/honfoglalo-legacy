@@ -76,8 +76,8 @@
                     out:fade|local={fadeParams}
                     href={getMarkerImageUrl(regionState)}
                     width="80"
-                    x={regionInfo.centerPos[0] - 40}
-                    y={regionInfo.centerPos[1] - 40}
+                    x={regionInfo.centerPos[0] - 34}
+                    y={regionInfo.centerPos[1] - 42}
                 />
             {:else if regionState.type === "normal"}
                 <g color="red">
@@ -109,6 +109,11 @@
                     {regionState.value}
                 </text>
             {/if}
+            <circle
+                cx={regionInfo.centerPos[0]}
+                cy={regionInfo.centerPos[1]}
+                r="5"
+            />
         {/each}
     </g>
     <g>

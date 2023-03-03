@@ -87,6 +87,9 @@
             case "haboru":
                 await handleHaboru(index);
                 break;
+            case "game-over":
+                alert("A játéknak már vége van");
+                break;
         }
         working = false;
     }
@@ -291,7 +294,7 @@
                     value: 400,
                 };
             } else {
-                $gameState.defendedCounts[defender]++;
+                awardDefendedBonus(defender);
             }
         }
         progressHaboru();
@@ -317,7 +320,7 @@
                 value: 400,
             };
         } else {
-            $gameState.defendedCounts[defender]++;
+            awardDefendedBonus(defender);
         }
         progressHaboru();
     }
@@ -360,7 +363,7 @@
                     transferRegionOwnerships(defender, attacker);
                 }
             } else {
-                $gameState.defendedCounts[defender]++;
+                awardDefendedBonus(defender);
             }
         }
         progressHaboru();
@@ -410,7 +413,7 @@
                 transferRegionOwnerships(defender, attacker);
             }
         } else {
-            $gameState.defendedCounts[defender]++;
+            awardDefendedBonus(defender);
         }
         progressHaboru();
     }
@@ -423,6 +426,11 @@
             ...region,
             towersRemaining: newTowers,
         };
+    }
+
+    function awardDefendedBonus(player: number) {
+        $gameState.defendedCounts[player]++;
+        $gameState = $gameState;
     }
 
     function progressHaboru() {
@@ -541,6 +549,10 @@
             </div>
         {/each}
     </div>
+{/if}
+
+{#if $gameState.gameProgress.type === 'game-over'}
+    <div class="text-center text-5xl">Vége a játéknak!</div>
 {/if}
 
 <button on:click={() => ($gameState = defaultGameState())}>Újraindítás</button>

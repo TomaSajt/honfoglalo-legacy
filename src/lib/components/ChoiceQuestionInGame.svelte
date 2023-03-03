@@ -94,6 +94,7 @@
                                     ? playerIdToStrongCssColor(player)
                                     : playerIdToWeakCssColor(player)};"
                                 on:click={() => (playerAnswers[j] = i)}
+                                disabled={!!resultCorrectPlayers}
                             />
                         {/each}
                     </div>

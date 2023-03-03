@@ -17,31 +17,26 @@
     let showQuestion = false;
 
     let players: number[] = [];
-    let guessResultCallback: (order: number[]) => any = () => {};
-    let choiceResultCallback: (correctPlayers: number[]) => any = () => {};
+    let guessResultCallback: (order: number[]) => void = () => {};
+    let choiceResultCallback: (correctPlayers: number[]) => void = () => {};
 
     export function startChoice(
         question: ChoiceQuestion,
-        playerList: number[],
-        cb: (correctPlayers: number[]) => any = () => {}
+        playerList: number[]
     ) {
         currentChoiceQuestion = question;
         players = playerList;
-        choiceResultCallback = cb;
         isChoiceQuestion = true;
         showQuestion = true;
+        return new Promise<number[]>((res) => (choiceResultCallback = res));
     }
 
-    export function startGuess(
-        question: GuessQuestion,
-        playerList: number[],
-        cb: (order: number[]) => any
-    ) {
+    export function startGuess(question: GuessQuestion, playerList: number[]) {
         currentGuessQuestion = question;
         players = playerList;
-        guessResultCallback = cb;
         isChoiceQuestion = false;
         showQuestion = true;
+        return new Promise<number[]>((res) => (guessResultCallback = res));
     }
 </script>
 

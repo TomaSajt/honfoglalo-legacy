@@ -69,7 +69,8 @@ const gameProgressScema = z.discriminatedUnion('type', [bazisfoglalasSchema, ter
 
 export const gameStateSchema = z.object({
     regions: z.array(regionSchema),
-    gameProgress: gameProgressScema
+    gameProgress: gameProgressScema,
+    defendedCounts: z.array(z.number()).length(3),
 });
 
 export type Region = z.infer<typeof regionSchema>;
@@ -85,6 +86,20 @@ export function defaultGameState(): GameState {
         gameProgress: {
             type: "bazisfoglalas",
             player: 0
-        }
+        },
+        defendedCounts: [0, 0, 0]
     };
+}
+
+
+export function tryParseState(text: string) {
+    try {
+        let res = gameStateSchema.safeParse(JSON.parse(text));
+        return res;
+    } catch (e) {
+        return {
+            success: false,
+            error: e
+        } as const
+    }
 }

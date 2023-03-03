@@ -5,3 +5,7 @@ export function assert(condition: any, msg?: string): asserts condition {
         throw new Error(errorMsg);
     }
 }
+
+export function sleep(milliseconds: number) {
+    return new Promise<void>(res => setTimeout(res, milliseconds))
+}

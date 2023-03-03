@@ -1,11 +1,15 @@
 <script lang="ts">
     import InteractiveMap from "$lib/components/InteractiveMap.svelte";
     import QuestionPrompter from "$lib/components/QuestionPrompter.svelte";
-    import { defaultGameState, gameStateSchema } from "$lib/state";
+    import {
+        defaultGameState,
+        gameStateSchema,
+        tryParseState,
+    } from "$lib/state";
     import { gameState } from "$lib/stores";
     import { onMount } from "svelte";
     import { defaultChoiceQuestion, defaultGuessQuestion } from "$lib/question";
-    import { assert } from "$lib/utils";
+    import { assert, sleep } from "$lib/utils";
     import {
         playerIdToHungarianName,
         playerIdToStrongCssColor,
@@ -24,10 +28,24 @@
         [2, 1, 0],
     ];
 
+    $: scores = calcScores($gameState);
+
+    function calcScores(..._: any[]) {
+        let scores = [0, 0, 0];
+        for (let region of $gameState.regions) {
+            if (region.type !== "fort" && region.type !== "normal") continue;
+            scores[region.player] += region.value;
+        }
+        for (let i = 0; i < 2; i++) {
+            scores[i] += 100 * $gameState.defendedCounts[i];
+        }
+        return scores;
+    }
+
     onMount(() => {
         let gameStateString = localStorage.getItem("gameState");
         if (gameStateString !== null) {
-            let res = gameStateSchema.safeParse(JSON.parse(gameStateString));
+            let res = tryParseState(gameStateString);
             if (res.success) $gameState = res.data;
             else alert("Hiba a játék betöltsése során: " + res.error);
         }
@@ -42,7 +60,14 @@
         });
     });
 
-    function onRegionClicked(index: number) {
+    let working = false;
+
+    async function onRegionClicked(index: number) {
+        if (working) {
+            alert("A kör még folyamatban van!");
+            return;
+        }
+        working = true;
         switch ($gameState.gameProgress.type) {
             case "bazisfoglalas":
                 handleBazisfoglalas(index);
@@ -60,9 +85,10 @@
                 handleFelosztas(index);
                 break;
             case "haboru":
-                handleHaboru(index);
+                await handleHaboru(index);
                 break;
         }
+        working = false;
     }
 
     function handleBazisfoglalas(index: number) {
@@ -163,7 +189,7 @@
         }
     }
 
-    function handleHaboru(index: number) {
+    async function handleHaboru(index: number) {
         let region = $gameState.regions[index];
         assert($gameState.gameProgress.type === "haboru");
         assert(region.type === "normal" || region.type === "fort");
@@ -185,72 +211,61 @@
         }
 
         if (region.type === "normal") {
-            startHaboruKerdesNormalFeleletvalasztos(index);
+            await startHaboruKerdesNormalFeleletvalasztos(index);
         } else {
-            startHaboruKerdesFortFeleletvalasztos(index);
+            await startHaboruKerdesFortFeleletvalasztos(index);
         }
     }
 
-    function handleHaboruNormal(index: number) {
-        startHaboruKerdesNormalFeleletvalasztos(index);
-    }
-
-    function startTerjeszkedesKerdes() {
+    async function startTerjeszkedesKerdes() {
         assert($gameState.gameProgress.type === "terjeszkedes-kerdes");
-        questionPrompter.startChoice(
+        let correct = await questionPrompter.startChoice(
             defaultChoiceQuestion(),
-            [0, 1, 2],
-            (correct) => {
-                assert($gameState.gameProgress.type === "terjeszkedes-kerdes");
-                for (let i = 0; i < $gameState.regions.length; i++) {
-                    let region = $gameState.regions[i];
-                    if (region.type !== "marked") continue;
-                    if (correct.includes(region.player)) {
-                        $gameState.regions[i] = {
-                            type: "normal",
-                            player: region.player,
-                            value: 200,
-                        };
-                    } else {
-                        $gameState.regions[i] = {
-                            type: "empty",
-                        };
-                    }
-                }
-                let skipToFelosztas =
-                    $gameState.regions.filter((x) => x.type === "empty")
-                        .length < 3;
-                if (!skipToFelosztas && $gameState.gameProgress.round < 5) {
-                    $gameState.gameProgress = {
-                        type: "terjeszkedes",
-                        playerOrderIndex: 0,
-                        round: $gameState.gameProgress.round + 1,
-                    };
-                } else {
-                    $gameState.gameProgress = {
-                        type: "felosztas-kerdes",
-                    };
-                }
-            }
+            [0, 1, 2]
         );
-    }
-
-    function startFelosztasKerdes() {
-        assert($gameState.gameProgress.type === "felosztas-kerdes");
-        questionPrompter.startGuess(
-            defaultGuessQuestion(),
-            [0, 1, 2],
-            (order) => {
-                assert($gameState.gameProgress.type === "felosztas-kerdes");
-                $gameState.gameProgress = {
-                    type: "felosztas",
-                    player: order[0],
+        for (let i = 0; i < $gameState.regions.length; i++) {
+            let region = $gameState.regions[i];
+            if (region.type !== "marked") continue;
+            if (correct.includes(region.player)) {
+                $gameState.regions[i] = {
+                    type: "normal",
+                    player: region.player,
+                    value: 200,
+                };
+            } else {
+                $gameState.regions[i] = {
+                    type: "empty",
                 };
             }
-        );
+        }
+        let skipToFelosztas =
+            $gameState.regions.filter((x) => x.type === "empty").length < 3;
+        if (!skipToFelosztas && $gameState.gameProgress.round < 5) {
+            $gameState.gameProgress = {
+                type: "terjeszkedes",
+                playerOrderIndex: 0,
+                round: $gameState.gameProgress.round + 1,
+            };
+        } else {
+            $gameState.gameProgress = {
+                type: "felosztas-kerdes",
+            };
+        }
     }
 
-    function startHaboruKerdesNormalFeleletvalasztos(index: number) {
+    async function startFelosztasKerdes() {
+        assert($gameState.gameProgress.type === "felosztas-kerdes");
+        let order = await questionPrompter.startGuess(
+            defaultGuessQuestion(),
+            [0, 1, 2]
+        );
+        $gameState.gameProgress = {
+            type: "felosztas",
+            player: order[0],
+        };
+    }
+
+    async function startHaboruKerdesNormalFeleletvalasztos(index: number) {
         let region = $gameState.regions[index];
         assert($gameState.gameProgress.type === "haboru");
         assert(region.type === "normal");
@@ -258,61 +273,112 @@
         let playerOrderIndex = $gameState.gameProgress.playerOrderIndex;
         let attacker = playerOrders[round][playerOrderIndex];
         let defender = region.player;
-        questionPrompter.startChoice(
+        let correct = await questionPrompter.startChoice(
             defaultChoiceQuestion(),
-            [attacker, defender].sort(),
-            (correct) => {
-                assert($gameState.gameProgress.type === "haboru");
-                if (correct.length == 2) {
-                    startHaboruKerdesNormalTipp(index);
+            [attacker, defender].sort()
+        );
+        if (correct.length == 2) {
+            await sleep(1000);
+            startHaboruKerdesNormalTipp(index);
+            return;
+        }
+        if (correct.length == 1) {
+            let winner = correct[0];
+            if (winner === attacker) {
+                $gameState.regions[index] = {
+                    type: "normal",
+                    player: attacker,
+                    value: 400,
+                };
+            } else {
+                $gameState.defendedCounts[defender]++;
+            }
+        }
+        progressHaboru();
+    }
+
+    async function startHaboruKerdesNormalTipp(index: number) {
+        let region = $gameState.regions[index];
+        assert($gameState.gameProgress.type === "haboru");
+        assert(region.type === "normal");
+        let round = $gameState.gameProgress.round;
+        let playerOrderIndex = $gameState.gameProgress.playerOrderIndex;
+        let attacker = playerOrders[round][playerOrderIndex];
+        let defender = region.player;
+        let order = await questionPrompter.startGuess(
+            defaultGuessQuestion(),
+            [attacker, defender].sort()
+        );
+        let winner = order[0];
+        if (winner === attacker) {
+            $gameState.regions[index] = {
+                type: "normal",
+                player: attacker,
+                value: 400,
+            };
+        } else {
+            $gameState.defendedCounts[defender]++;
+        }
+        progressHaboru();
+    }
+
+    async function startHaboruKerdesFortFeleletvalasztos(index: number) {
+        let region = $gameState.regions[index];
+        assert($gameState.gameProgress.type === "haboru");
+        assert(region.type === "fort");
+        let round = $gameState.gameProgress.round;
+        let playerOrderIndex = $gameState.gameProgress.playerOrderIndex;
+        let attacker = playerOrders[round][playerOrderIndex];
+        let defender = region.player;
+        let correct = await questionPrompter.startChoice(
+            defaultChoiceQuestion(),
+            [attacker, defender].sort()
+        );
+        if (correct.length == 2) {
+            await sleep(1000);
+            await startHaboruKerdesFortTipp(index);
+            return;
+        }
+        if (correct.length == 1) {
+            let winner = correct[0];
+            if (winner === attacker) {
+                let alreadyDestroyed = region.towersRemaining === 0;
+                damageFort(index);
+                region = $gameState.regions[index];
+                assert(region.type === "fort");
+                if (region.towersRemaining > 0) {
+                    await sleep(1000);
+                    await startHaboruKerdesFortFeleletvalasztos(index);
                     return;
                 }
-                if (correct.length == 1) {
-                    let winner = correct[0];
-                    if (winner === attacker) {
-                        $gameState.regions[index] = {
-                            type: "normal",
-                            player: attacker,
-                            value: 400,
-                        };
-                    } else {
-                        // TODO: add bonus 100 score to defender
-                    }
-                }
-                progressHaboru();
-            }
-        );
-    }
-
-    function startHaboruKerdesNormalTipp(index: number) {
-        let region = $gameState.regions[index];
-        assert($gameState.gameProgress.type === "haboru");
-        assert(region.type === "normal");
-        let round = $gameState.gameProgress.round;
-        let playerOrderIndex = $gameState.gameProgress.playerOrderIndex;
-        let attacker = playerOrders[round][playerOrderIndex];
-        let defender = region.player;
-        questionPrompter.startGuess(
-            defaultGuessQuestion(),
-            [attacker, defender].sort(),
-            (order) => {
-                assert($gameState.gameProgress.type === "haboru");
-                let winner = order[0];
-                if (winner === attacker) {
+                if (alreadyDestroyed) {
                     $gameState.regions[index] = {
-                        type: "normal",
+                        ...region,
                         player: attacker,
-                        value: 400,
                     };
                 } else {
-                    // TODO: add bonus 100 score to defender
+                    transferRegionOwnerships(defender, attacker);
                 }
-                progressHaboru();
+            } else {
+                $gameState.defendedCounts[defender]++;
             }
-        );
+        }
+        progressHaboru();
     }
 
-    function startHaboruKerdesFortFeleletvalasztos(index: number) {
+    function transferRegionOwnerships(fromPlayer: number, toPlayer: number) {
+        for (let i = 0; i < $gameState.regions.length; i++) {
+            let region = $gameState.regions[i];
+            if (region.type !== "normal" && region.type !== "fort") continue;
+            if (region.player !== fromPlayer) continue;
+            $gameState.regions[i] = {
+                ...region,
+                player: toPlayer,
+            };
+        }
+    }
+
+    async function startHaboruKerdesFortTipp(index: number) {
         let region = $gameState.regions[index];
         assert($gameState.gameProgress.type === "haboru");
         assert(region.type === "fort");
@@ -320,84 +386,43 @@
         let playerOrderIndex = $gameState.gameProgress.playerOrderIndex;
         let attacker = playerOrders[round][playerOrderIndex];
         let defender = region.player;
-        questionPrompter.startChoice(
-            defaultChoiceQuestion(),
-            [attacker, defender].sort(),
-            (correct) => {
-                assert($gameState.gameProgress.type === "haboru");
-                assert(region.type === "fort");
-                if (correct.length == 2) {
-                    startHaboruKerdesFortTipp(index);
-                    return;
-                }
-                if (correct.length == 1) {
-                    let winner = correct[0];
-                    if (winner === attacker) {
-                        if (region.towersRemaining > 1) {
-                            $gameState.regions[index] = {
-                                type: "fort",
-                                player: defender,
-                                towersRemaining: region.towersRemaining - 1,
-                                value: 1000,
-                            };
-                            startHaboruKerdesFortFeleletvalasztos(index);
-                            return;
-                        } else {
-                            $gameState.regions[index] = {
-                                type: "fort",
-                                player: attacker,
-                                towersRemaining: 0,
-                                value: 1000,
-                            };
-                        }
-                    } else {
-                        // TODO: add bonus 100 score to defender
-                    }
-                }
-                progressHaboru();
-            }
-        );
-    }
-
-    function startHaboruKerdesFortTipp(index: number) {
-        let region = $gameState.regions[index];
-        assert($gameState.gameProgress.type === "haboru");
-        assert(region.type === "fort");
-        let round = $gameState.gameProgress.round;
-        let playerOrderIndex = $gameState.gameProgress.playerOrderIndex;
-        let attacker = playerOrders[round][playerOrderIndex];
-        let defender = region.player;
-        questionPrompter.startGuess(
+        let order = await questionPrompter.startGuess(
             defaultGuessQuestion(),
-            [attacker, defender].sort(),
-            (order) => {
-                assert($gameState.gameProgress.type === "haboru");
-                assert(region.type === "fort");
-                let winner = order[0];
-                if (winner === attacker) {
-                    if (region.towersRemaining > 1) {
-                        $gameState.regions[index] = {
-                            type: "fort",
-                            player: defender,
-                            towersRemaining: region.towersRemaining - 1,
-                            value: 1000,
-                        };
-                        startHaboruKerdesFortFeleletvalasztos(index);
-                        return;
-                    } else {
-                        $gameState.regions[index] = {
-                            type: "fort",
-                            player: attacker,
-                            towersRemaining: 0,
-                            value: 1000,
-                        };
-                    }
-                } else {
-                    // TODO: add bonus 100 score to defender
-                }
-                progressHaboru();
-            }
+            [attacker, defender].sort()
         );
+        let winner = order[0];
+        if (winner === attacker) {
+            let alreadyDestroyed = region.towersRemaining === 0;
+            damageFort(index);
+            region = $gameState.regions[index];
+            assert(region.type === "fort");
+            if (region.towersRemaining > 0) {
+                await sleep(1000);
+                await startHaboruKerdesFortFeleletvalasztos(index);
+                return;
+            }
+            if (alreadyDestroyed) {
+                $gameState.regions[index] = {
+                    ...region,
+                    player: attacker,
+                };
+            } else {
+                transferRegionOwnerships(defender, attacker);
+            }
+        } else {
+            $gameState.defendedCounts[defender]++;
+        }
+        progressHaboru();
+    }
+
+    function damageFort(index: number) {
+        let region = $gameState.regions[index];
+        assert(region.type === "fort");
+        let newTowers = Math.max(0, region.towersRemaining - 1);
+        $gameState.regions[index] = {
+            ...region,
+            towersRemaining: newTowers,
+        };
     }
 
     function progressHaboru() {
@@ -414,6 +439,25 @@
                 };
             }
         }
+        assert($gameState.gameProgress.type === "haboru");
+        let playersInGame = new Set<number>();
+        for (let region of $gameState.regions) {
+            if (region.type !== "fort" && region.type !== "normal") continue;
+            playersInGame.add(region.player);
+        }
+
+        let round = $gameState.gameProgress.round;
+        let playerOrderIndex = $gameState.gameProgress.playerOrderIndex;
+        let player = playerOrders[round][playerOrderIndex];
+
+        if (playersInGame.size < 2) {
+            $gameState.gameProgress = {
+                type: "game-over",
+            };
+            return;
+        }
+        if (playersInGame.has(player)) return;
+        progressHaboru();
     }
 
     function getPlayerReachableRegionIndices(player: number) {
@@ -440,6 +484,12 @@
 <nav class="px-3 pt-3">
     <a class="bg-white hover:bg-slate-300" href="/">Főmenü</a>
 </nav>
+
+<div class="flex justify-evenly">
+    {#each scores as score, i}
+        <div>{playerIdToHungarianName(i)}: {score}</div>
+    {/each}
+</div>
 
 <InteractiveMap
     {onRegionClicked}

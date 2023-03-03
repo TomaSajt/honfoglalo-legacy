@@ -5,12 +5,12 @@
 
 <div class="h-full flex flex-col">
     <header class="">
-        <div class="text-3xl text-center py-7 bg-red-500">Cím</div>
+        <div class="text-3xl text-center py-7 bg-red-500">Honfoglaló Legacy 2024 Delux 4K HDR UDEP</div>
     </header>
     <main class="flex-grow">
         <div class="max-w-2xl min-w-min mx-auto my-4 flex flex-col text-center min-h-full justify-center gap-4">
-            <a href="/play">Játék</a>
-            <a href="/editor">Kérdéskezelő</a>
+            <a class="bg-orange-400 hover:bg-slate-200 mx-60 py-4 border-2 border-black rounded-xl" href="/play">Játék</a>
+            <a class="bg-orange-400 hover:bg-slate-200 mx-60 py-4 border-2 border-black rounded-xl" href="/editor">Kérdéskezelő</a>
         </div>
     </main>
     
@@ -25,7 +25,6 @@
         background-image: url("laci.png");
         background-repeat: no-repeat;
         background-position: center;
-        
     }
 </style>
 

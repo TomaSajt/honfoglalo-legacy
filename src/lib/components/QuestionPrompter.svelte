@@ -1,17 +1,9 @@
 <script lang="ts">
-    import GuessQuestionInGame from "$lib/components/GuessQuestionInGame.svelte";
+    import GuessQuestionInGame from "$lib/components/GuessQuestionPrompt.svelte";
     import ScreenOverlay from "$lib/components/ScreenOverlay.svelte";
-    import {
-        defaultChoiceQuestion,
-        defaultGuessQuestion,
-        type ChoiceQuestion,
-        type GuessQuestion,
-    } from "$lib/question";
     import { tick } from "svelte";
-    import ChoiceQuestionInGame from "./ChoiceQuestionInGame.svelte";
+    import ChoiceQuestionInGame from "./ChoiceQuestionPrompt.svelte";
 
-    let currentChoiceQuestion = defaultChoiceQuestion();
-    let currentGuessQuestion = defaultGuessQuestion();
     let isChoiceQuestion = false;
 
     let showQuestion = false;
@@ -20,19 +12,14 @@
     let guessResultCallback: (order: number[]) => void = () => {};
     let choiceResultCallback: (correctPlayers: number[]) => void = () => {};
 
-    export function startChoice(
-        question: ChoiceQuestion,
-        playerList: number[]
-    ) {
-        currentChoiceQuestion = question;
+    export function startChoice(playerList: number[]) {
         players = playerList;
         isChoiceQuestion = true;
         showQuestion = true;
         return new Promise<number[]>((res) => (choiceResultCallback = res));
     }
 
-    export function startGuess(question: GuessQuestion, playerList: number[]) {
-        currentGuessQuestion = question;
+    export function startGuess(playerList: number[]) {
         players = playerList;
         isChoiceQuestion = false;
         showQuestion = true;
@@ -44,7 +31,6 @@
     <ScreenOverlay>
         {#if isChoiceQuestion}
             <ChoiceQuestionInGame
-                currentQuestion={currentChoiceQuestion}
                 {players}
                 onResult={async (correct) => {
                     showQuestion = false;
@@ -54,7 +40,6 @@
             />
         {:else}
             <GuessQuestionInGame
-                currentQuestion={currentGuessQuestion}
                 {players}
                 onResult={async (order) => {
                     showQuestion = false;

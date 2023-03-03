@@ -8,7 +8,6 @@
     } from "$lib/state";
     import { gameState } from "$lib/stores";
     import { onMount } from "svelte";
-    import { defaultChoiceQuestion, defaultGuessQuestion } from "$lib/question";
     import { assert, sleep } from "$lib/utils";
     import {
         playerIdToHungarianName,
@@ -36,9 +35,11 @@
             if (region.type !== "fort" && region.type !== "normal") continue;
             scores[region.player] += region.value;
         }
-        for (let i = 0; i < 2; i++) {
+        for (let i = 0; i < 3; i++) {
             scores[i] += 100 * $gameState.defendedCounts[i];
+            console.log($gameState.defendedCounts[i]);
         }
+        console.log("calculating score");
         return scores;
     }
 
@@ -222,10 +223,7 @@
 
     async function startTerjeszkedesKerdes() {
         assert($gameState.gameProgress.type === "terjeszkedes-kerdes");
-        let correct = await questionPrompter.startChoice(
-            defaultChoiceQuestion(),
-            [0, 1, 2]
-        );
+        let correct = await questionPrompter.startChoice([0, 1, 2]);
         for (let i = 0; i < $gameState.regions.length; i++) {
             let region = $gameState.regions[i];
             if (region.type !== "marked") continue;
@@ -258,10 +256,7 @@
 
     async function startFelosztasKerdes() {
         assert($gameState.gameProgress.type === "felosztas-kerdes");
-        let order = await questionPrompter.startGuess(
-            defaultGuessQuestion(),
-            [0, 1, 2]
-        );
+        let order = await questionPrompter.startGuess([0, 1, 2]);
         $gameState.gameProgress = {
             type: "felosztas",
             player: order[0],
@@ -277,7 +272,6 @@
         let attacker = playerOrders[round][playerOrderIndex];
         let defender = region.player;
         let correct = await questionPrompter.startChoice(
-            defaultChoiceQuestion(),
             [attacker, defender].sort()
         );
         if (correct.length == 2) {
@@ -309,7 +303,6 @@
         let attacker = playerOrders[round][playerOrderIndex];
         let defender = region.player;
         let order = await questionPrompter.startGuess(
-            defaultGuessQuestion(),
             [attacker, defender].sort()
         );
         let winner = order[0];
@@ -334,7 +327,6 @@
         let attacker = playerOrders[round][playerOrderIndex];
         let defender = region.player;
         let correct = await questionPrompter.startChoice(
-            defaultChoiceQuestion(),
             [attacker, defender].sort()
         );
         if (correct.length == 2) {
@@ -390,7 +382,6 @@
         let attacker = playerOrders[round][playerOrderIndex];
         let defender = region.player;
         let order = await questionPrompter.startGuess(
-            defaultGuessQuestion(),
             [attacker, defender].sort()
         );
         let winner = order[0];
@@ -430,7 +421,8 @@
 
     function awardDefendedBonus(player: number) {
         $gameState.defendedCounts[player]++;
-        $gameState = $gameState;
+        $gameState.defendedCounts = $gameState.defendedCounts;
+        console.log("awarding bonus");
     }
 
     function progressHaboru() {
@@ -468,12 +460,12 @@
         progressHaboru();
     }
 
-    function getPlayerReachableRegionIndices(player: number) {
-        function getNeighbourIndices(index: number) {
-            let regionInfo = hungaryMapInfo.regions[index];
-            return regionInfo.neighbours.map((id) => getRegionIndexFromId(id));
-        }
+    function getNeighbourIndices(index: number) {
+        let regionInfo = hungaryMapInfo.regions[index];
+        return regionInfo.neighbours.map((id) => getRegionIndexFromId(id));
+    }
 
+    function getPlayerReachableRegionIndices(player: number) {
         let playerRegionIndices: number[] = [];
         for (let i = 0; i < hungaryMapInfo.regions.length; i++) {
             let regionState = $gameState.regions[i];
@@ -551,7 +543,7 @@
     </div>
 {/if}
 
-{#if $gameState.gameProgress.type === 'game-over'}
+{#if $gameState.gameProgress.type === "game-over"}
     <div class="text-center text-5xl">Vége a játéknak!</div>
 {/if}
 

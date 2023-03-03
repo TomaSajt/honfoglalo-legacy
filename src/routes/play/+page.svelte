@@ -481,72 +481,81 @@
     }
 </script>
 
-<nav class="px-3 pt-3">
-    <a class="bg-white hover:bg-slate-300" href="/">Főmenü</a>
-</nav>
+<div class="flex flex-col h-full">
+    <div>
+        <nav class="px-3 pt-3">
+            <a class="bg-white hover:bg-slate-300" href="/">Főmenü</a>
+        </nav>
 
-<div class="flex justify-evenly">
-    {#each scores as score, i}
-        <div>{playerIdToHungarianName(i)}: {score}</div>
-    {/each}
-</div>
-
-<InteractiveMap
-    {onRegionClicked}
-    regionStates={$gameState.regions}
-    class="mx-auto w-2/3"
-/>
-{#if $gameState.gameProgress.type === "terjeszkedes-kerdes"}
-    <div class="flex justify-center">
-        <button on:click={() => startTerjeszkedesKerdes()}>
-            Kérdés indítása (terjeszkedés)
-        </button>
+        <div class="flex justify-evenly">
+            {#each scores as score, i}
+                <div>{playerIdToHungarianName(i)}: {score}</div>
+            {/each}
+        </div>
     </div>
-{/if}
 
-{#if $gameState.gameProgress.type === "felosztas-kerdes"}
-    <div class="flex justify-center">
-        <button on:click={() => startFelosztasKerdes()}>
-            Kérdés indítása (felosztás)
-        </button>
-    </div>
-{/if}
+    <InteractiveMap
+        {onRegionClicked}
+        regionStates={$gameState.regions}
+        class="flex-grow"
+    />
+    <div>
+        {#if $gameState.gameProgress.type === "terjeszkedes-kerdes"}
+            <div class="flex justify-center">
+                <button on:click={() => startTerjeszkedesKerdes()}>
+                    Kérdés indítása (terjeszkedés)
+                </button>
+            </div>
+        {/if}
 
-{#if $gameState.gameProgress.type === "felosztas"}
-    <div class="text-center">
-        {playerIdToHungarianName($gameState.gameProgress.player)} választ
-    </div>
-{/if}
+        {#if $gameState.gameProgress.type === "felosztas-kerdes"}
+            <div class="flex justify-center">
+                <button on:click={() => startFelosztasKerdes()}>
+                    Kérdés indítása (felosztás)
+                </button>
+            </div>
+        {/if}
 
-{#if $gameState.gameProgress.type === "terjeszkedes" || $gameState.gameProgress.type === "terjeszkedes-kerdes" || $gameState.gameProgress.type === "haboru"}
-    <div class="flex gap-2 justify-center">
-        {#each playerOrders as order, i}
-            <div
-                class="flex outline-black -outline-offset-1 outline-2"
-                class:outline={$gameState.gameProgress.round === i}
-            >
-                {#each order as player, j}
-                    {@const isCurrent =
-                        $gameState.gameProgress.round === i &&
-                        $gameState.gameProgress.type !==
-                            "terjeszkedes-kerdes" &&
-                        $gameState.gameProgress.playerOrderIndex === j}
+        {#if $gameState.gameProgress.type === "felosztas"}
+            <div class="text-center">
+                {playerIdToHungarianName($gameState.gameProgress.player)} választ
+            </div>
+        {/if}
+
+        {#if $gameState.gameProgress.type === "terjeszkedes" || $gameState.gameProgress.type === "terjeszkedes-kerdes" || $gameState.gameProgress.type === "haboru"}
+            <div class="flex gap-2 justify-center">
+                {#each playerOrders as order, i}
                     <div
-                        class="w-4 h-4"
-                        style="background-color: {isCurrent
-                            ? playerIdToStrongCssColor(player)
-                            : playerIdToWeakCssColor(player)};"
-                    />
+                        class="flex outline-black -outline-offset-1 outline-2"
+                        class:outline={$gameState.gameProgress.round === i}
+                    >
+                        {#each order as player, j}
+                            {@const isCurrent =
+                                $gameState.gameProgress.round === i &&
+                                $gameState.gameProgress.type !==
+                                    "terjeszkedes-kerdes" &&
+                                $gameState.gameProgress.playerOrderIndex === j}
+                            <div
+                                class="w-4 h-4"
+                                style="background-color: {isCurrent
+                                    ? playerIdToStrongCssColor(player)
+                                    : playerIdToWeakCssColor(player)};"
+                            />
+                        {/each}
+                    </div>
                 {/each}
             </div>
-        {/each}
+        {/if}
+
+        {#if $gameState.gameProgress.type === "game-over"}
+            <div class="text-center text-5xl">Vége a játéknak!</div>
+        {/if}
+
+        <button on:click={() => ($gameState = defaultGameState())}
+            >Újraindítás</button
+        >
+        <div>$gameState.gameProgress.type: {$gameState.gameProgress.type}</div>
     </div>
-{/if}
+</div>
 
-{#if $gameState.gameProgress.type === "game-over"}
-    <div class="text-center text-5xl">Vége a játéknak!</div>
-{/if}
-
-<button on:click={() => ($gameState = defaultGameState())}>Újraindítás</button>
-<div>$gameState.gameProgress.type: {$gameState.gameProgress.type}</div>
 <QuestionPrompter bind:this={questionPrompter} />

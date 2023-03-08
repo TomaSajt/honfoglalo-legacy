@@ -1,8 +1,3 @@
-<script lang="ts">
-    let a = [1, 2, 3];
-</script>
-
-
 <div class="h-full flex flex-col">
     <header class="">
         <div class="text-3xl text-center py-7 bg-red-500 font-bold text-blue-700">Réges régen, egy messzi-messzi játékot lekoppintva</div>
@@ -28,10 +23,3 @@
         background-position: center, right 50px top 10px;
     }
 </style>
-
-
-<!-- <div class="bg-blue-600 p-5 hover:bg-blue-200 flex justify-evenly">
-    {#each a as v}
-        <div>{v}</div>
-    {/each}
-</div> -->

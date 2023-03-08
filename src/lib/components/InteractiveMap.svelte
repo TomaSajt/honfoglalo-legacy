@@ -109,11 +109,6 @@
                     {regionState.value}
                 </text>
             {/if}
-            <circle
-                cx={regionInfo.centerPos[0]}
-                cy={regionInfo.centerPos[1]}
-                r="5"
-            />
         {/each}
     </g>
     <g>

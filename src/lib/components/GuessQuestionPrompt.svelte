@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { playerIdToHungarianName } from "$lib/player";
     import { onMount } from "svelte";
 
     export let players: number[];
@@ -44,7 +45,9 @@
             <div class="flex flex-col">
                 {#each order as player, i}
                     <div class="flex">
-                        <div class="flex-grow">{player}</div>
+                        <div class="flex-grow">
+                            {playerIdToHungarianName(player)}
+                        </div>
                         {#if i > 0}
                             <button on:click={() => swapOrder(i, i - 1)}>
                                 Move up

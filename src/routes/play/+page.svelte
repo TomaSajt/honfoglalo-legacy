@@ -482,10 +482,14 @@
 </script>
 
 <div class="flex flex-col h-full">
-    <div>
-        <nav class="px-3 pt-3">
+    <div class="px-4 pt-4">
+        <nav>
             <a class="bg-white hover:bg-slate-300" href="/">Főmenü</a>
         </nav>
+
+        <button on:click={() => ($gameState = defaultGameState())}>
+            Újraindítás
+        </button>
 
         <div class="flex justify-evenly">
             {#each scores as score, i}
@@ -499,7 +503,7 @@
         regionStates={$gameState.regions}
         class="flex-grow"
     />
-    <div>
+    <div class="h-20 pb-4 bg-slate-100 flex flex-col justify-between">
         {#if $gameState.gameProgress.type === "terjeszkedes-kerdes"}
             <div class="flex justify-center">
                 <button on:click={() => startTerjeszkedesKerdes()}>
@@ -550,11 +554,6 @@
         {#if $gameState.gameProgress.type === "game-over"}
             <div class="text-center text-5xl">Vége a játéknak!</div>
         {/if}
-
-        <button on:click={() => ($gameState = defaultGameState())}
-            >Újraindítás</button
-        >
-        <div>$gameState.gameProgress.type: {$gameState.gameProgress.type}</div>
     </div>
 </div>
 

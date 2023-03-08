@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { playerIdToHungarianName } from "$lib/player";
     import { onMount } from "svelte";
 
     export let players: number[];
@@ -47,7 +48,9 @@
             <div class="flex flex-col">
                 {#each players as player}
                     <div class="flex">
-                        <div class="flex-grow">{player}</div>
+                        <div class="flex-grow">
+                            {playerIdToHungarianName(player)}
+                        </div>
                         <button on:click={() => toggleCorrect(player)}>
                             Toggle correct
                         </button>

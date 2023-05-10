@@ -15,6 +15,9 @@
         playerIdToWeakCssColor,
     } from "$lib/player";
     import { getRegionIndexFromId, hungaryMapInfo } from "$lib/mapInfo";
+    import { page } from "$app/stores";
+
+    $: localStorageName = "gameState-" + $page.params.id;
 
     let questionPrompter: QuestionPrompter;
 
@@ -44,7 +47,7 @@
     }
 
     onMount(() => {
-        let gameStateString = localStorage.getItem("gameState");
+        let gameStateString = localStorage.getItem(localStorageName);
         if (gameStateString !== null) {
             let res = tryParseState(gameStateString);
             if (res.success) $gameState = res.data;
@@ -54,7 +57,7 @@
         gameState.subscribe((newState) => {
             let res = gameStateSchema.safeParse(newState);
             if (res.success) {
-                localStorage.setItem("gameState", JSON.stringify(newState));
+                localStorage.setItem(localStorageName, JSON.stringify(newState));
             } else {
                 alert("Hibás játékállapot: " + res.error);
             }
@@ -496,11 +499,17 @@
         <div class="flex justify-evenly">
             {#each scores as score, i}
                 <div class="rounded border border-black w-24">
-                    <div class="h-4" style="background-color: {playerIdToWeakCssColor(i)};"></div>
+                    <div
+                        class="h-4"
+                        style="background-color: {playerIdToWeakCssColor(i)};"
+                    />
                     <div class="text-center">
                         {score} pont
                     </div>
-                    <div class="h-4"  style="background-color: {playerIdToWeakCssColor(i)};"></div>
+                    <div
+                        class="h-4"
+                        style="background-color: {playerIdToWeakCssColor(i)};"
+                    />
                 </div>
             {/each}
         </div>
@@ -564,4 +573,3 @@
         {/if}
     </div>
 </div>
-

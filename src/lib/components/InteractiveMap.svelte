@@ -29,19 +29,19 @@
         assert(regionState.type === "fort");
         if (regionState.towersRemaining === 0) return "fort/destroyed.png";
         let name = playerIdToStringId(regionState.player);
-        return `fort/${name}/${regionState.towersRemaining}.png`;
+        return `/fort/${name}/${regionState.towersRemaining}.png`;
     }
 
     function getArmyImageUrl(regionState: RegionState) {
         assert(regionState.type === "normal");
         let name = playerIdToStringId(regionState.player);
-        return `army/${name}.svg`;
+        return `/army/${name}.svg`;
     }
 
     function getMarkerImageUrl(regionState: RegionState) {
         assert(regionState.type === "marked");
         let name = playerIdToStringId(regionState.player);
-        return `marker/${name}.png`;
+        return `/marker/${name}.png`;
     }
 </script>
 

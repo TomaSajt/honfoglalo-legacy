@@ -481,6 +481,8 @@
     }
 </script>
 
+<QuestionPrompter bind:this={questionPrompter} />
+
 <div class="flex flex-col h-full">
     <div class="px-4 pt-4">
         <nav>
@@ -493,7 +495,13 @@
 
         <div class="flex justify-evenly">
             {#each scores as score, i}
-                <div>{playerIdToHungarianName(i)}: {score}</div>
+                <div class="rounded border border-black w-24">
+                    <div class="h-4" style="background-color: {playerIdToWeakCssColor(i)};"></div>
+                    <div class="text-center">
+                        {score} pont
+                    </div>
+                    <div class="h-4"  style="background-color: {playerIdToWeakCssColor(i)};"></div>
+                </div>
             {/each}
         </div>
     </div>
@@ -501,7 +509,7 @@
     <InteractiveMap
         {onRegionClicked}
         regionStates={$gameState.regions}
-        class="flex-grow"
+        class="flex-grow min-h-[30%]"
     />
     <div class="h-20 pb-4 bg-slate-100 flex flex-col justify-between">
         {#if $gameState.gameProgress.type === "terjeszkedes-kerdes"}
@@ -557,4 +565,3 @@
     </div>
 </div>
 
-<QuestionPrompter bind:this={questionPrompter} />

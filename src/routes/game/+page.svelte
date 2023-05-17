@@ -1,9 +1,9 @@
 <script lang="ts">
-    import { navigating, page } from "$app/stores";
-    import { gameState } from "$lib/stores";
+    import { goto } from "$app/navigation";
     import { onMount } from "svelte";
 
     let gameIds: string[] = [];
+    let newGameId: string = "";
 
     onMount(() => reloadGameIds());
 
@@ -35,7 +35,28 @@
                     </button>
                 </div>
             </div>
+        {:else}
+            <div>Nincs játék folyamatban!</div>
         {/each}
     </div>
-    <div class="text-center pt-10">Új játék indításához egészítsd ki a linket egy játékazonosítóval: /game/azonosito</div>
+    <div class="pt-10">
+        <div class="flex flex-col gap-4 p-4 border border-black w-fit mx-auto">
+            <span class="text-center">Új játék indítása</span>
+            <input
+                type="text"
+                bind:value={newGameId}
+                class="outline focus:outline-2 outline-1 rounded outline-slate-900 w-60 text-center"
+                placeholder="azonosító"
+            />
+            <div class="px-8 pt-2">
+                <button
+                    disabled={newGameId == ""}
+                    on:click={() => goto(`/game/${encodeURI(newGameId)}`)}
+                    class="disabled:opacity-50 bg-slate-200 w-full rounded border border-black"
+                >
+                    Kész
+                </button>
+            </div>
+        </div>
+    </div>
 </div>

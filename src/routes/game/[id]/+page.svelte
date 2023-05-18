@@ -54,14 +54,22 @@
             else alert("Hiba a játék betöltsése során: " + res.error);
         }
 
-        gameState.subscribe((newState) => {
+        let unsubscribe = gameState.subscribe((newState) => {
             let res = gameStateSchema.safeParse(newState);
             if (res.success) {
-                localStorage.setItem(localStorageName, JSON.stringify(newState));
+                localStorage.setItem(
+                    localStorageName,
+                    JSON.stringify(newState)
+                );
             } else {
                 alert("Hibás játékállapot: " + res.error);
             }
         });
+
+        return () => {
+            unsubscribe()
+            $gameState = defaultGameState()
+        };
     });
 
     let working = false;
@@ -100,8 +108,11 @@
 
     function handleBazisfoglalas(index: number) {
         assert($gameState.gameProgress.type === "bazisfoglalas");
-        if ($gameState.regions[index].type !== "empty") {
-            alert("Csak szabad vármegyéket foglalhatsz el");
+        let neighbourhood = [index, ...getNeighbourIndices(index)];
+        if (neighbourhood.some((i) => $gameState.regions[i].type != "empty")) {
+            alert(
+                "Csak más játékossal nem szomszédos vármegyéket foglalhatsz el"
+            );
             return;
         }
         let currentPlayer = $gameState.gameProgress.player;

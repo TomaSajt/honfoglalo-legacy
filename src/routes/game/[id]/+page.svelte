@@ -47,6 +47,7 @@
     }
 
     onMount(() => {
+        $gameState = defaultGameState();
         let gameStateString = localStorage.getItem(localStorageName);
         if (gameStateString !== null) {
             let res = tryParseState(gameStateString);
@@ -66,10 +67,7 @@
             }
         });
 
-        return () => {
-            unsubscribe()
-            $gameState = defaultGameState()
-        };
+        return () => unsubscribe();
     });
 
     let working = false;

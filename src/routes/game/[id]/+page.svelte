@@ -11,11 +11,11 @@
     import { assert, sleep } from "$lib/utils";
     import {
         playerIdToHungarianName,
-        playerIdToStrongCssColor,
         playerIdToWeakCssColor,
     } from "$lib/player";
     import { getRegionIndexFromId, hungaryMapInfo } from "$lib/mapInfo";
     import { page } from "$app/stores";
+    import PlayerOrdersBar from "$lib/components/PlayerOrdersBar.svelte";
 
     $: localStorageName = "gameState-" + $page.params.id;
 
@@ -553,28 +553,12 @@
         {/if}
 
         {#if $gameState.gameProgress.type === "terjeszkedes" || $gameState.gameProgress.type === "terjeszkedes-kerdes" || $gameState.gameProgress.type === "haboru"}
-            <div class="flex gap-2 justify-center">
-                {#each playerOrders as order, i}
-                    <div
-                        class="flex outline-black -outline-offset-1 outline-2"
-                        class:outline={$gameState.gameProgress.round === i}
-                    >
-                        {#each order as player, j}
-                            {@const isCurrent =
-                                $gameState.gameProgress.round === i &&
-                                $gameState.gameProgress.type !==
-                                    "terjeszkedes-kerdes" &&
-                                $gameState.gameProgress.playerOrderIndex === j}
-                            <div
-                                class="w-4 h-4"
-                                style="background-color: {isCurrent
-                                    ? playerIdToStrongCssColor(player)
-                                    : playerIdToWeakCssColor(player)};"
-                            />
-                        {/each}
-                    </div>
-                {/each}
-            </div>
+            {@const round = $gameState.gameProgress.round}
+            {@const playerOrderIndex =
+                $gameState.gameProgress.type == "terjeszkedes-kerdes"
+                    ? -1
+                    : $gameState.gameProgress.playerOrderIndex}
+            <PlayerOrdersBar {playerOrders} {round} {playerOrderIndex} />
         {/if}
 
         {#if $gameState.gameProgress.type === "game-over"}

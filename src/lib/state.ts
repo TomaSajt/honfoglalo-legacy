@@ -32,7 +32,7 @@ const regionSchema = z.discriminatedUnion('type', [
 
 const bazisfoglalasSchema = z.object({
     type: z.literal("bazisfoglalas"),
-    player: z.number().int().min(0).max(2)
+    playerOrderIndex: z.number().int().min(0).max(2)
 });
 
 const terjeszkedesSchema = z.object({
@@ -85,7 +85,7 @@ export function defaultGameState(): GameState {
         })),
         gameProgress: {
             type: "bazisfoglalas",
-            player: 0
+            playerOrderIndex: 0
         },
         defendedCounts: [0, 0, 0]
     };

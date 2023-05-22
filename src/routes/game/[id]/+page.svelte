@@ -21,6 +21,8 @@
 
     let questionPrompter: QuestionPrompter;
 
+    let bazisfoglalasPlayerOrder = [0, 1, 2];
+
     let playerOrders = [
         [0, 1, 2],
         [1, 2, 0],
@@ -40,9 +42,7 @@
         }
         for (let i = 0; i < 3; i++) {
             scores[i] += 100 * $gameState.defendedCounts[i];
-            console.log($gameState.defendedCounts[i]);
         }
-        console.log("calculating score");
         return scores;
     }
 
@@ -67,7 +67,10 @@
             }
         });
 
-        return () => unsubscribe();
+        return () => {
+            unsubscribe();
+            $gameState = defaultGameState();
+        };
     });
 
     let working = false;
@@ -113,21 +116,23 @@
             );
             return;
         }
-        let currentPlayer = $gameState.gameProgress.player;
+        let playerOrderIndex = $gameState.gameProgress.playerOrderIndex;
+        let currentPlayer = bazisfoglalasPlayerOrder[playerOrderIndex];
+
         $gameState.regions[index] = {
             player: currentPlayer,
             type: "fort",
             towersRemaining: 3,
             value: 1000,
         };
-        if ($gameState.gameProgress.player === 2) {
+        if ($gameState.gameProgress.playerOrderIndex === 2) {
             $gameState.gameProgress = {
                 type: "terjeszkedes",
                 playerOrderIndex: 0,
                 round: 0,
             };
         } else {
-            $gameState.gameProgress.player++;
+            $gameState.gameProgress.playerOrderIndex++;
         }
     }
 
@@ -142,11 +147,10 @@
 
         let player = playerOrders[round][playerOrderIndex];
         let neigbourIndices = getPlayerReachableRegionIndices(player);
-        let bypassNeighbourConstraint =
-            neigbourIndices.filter(
-                (i) => $gameState.regions[i].type === "empty"
-            ).length === 0;
-        if (!bypassNeighbourConstraint && !neigbourIndices.includes(index)) {
+        let emptyNeighbourCount = neigbourIndices.filter(
+            (i) => $gameState.regions[i].type === "empty"
+        ).length;
+        if (emptyNeighbourCount !== 0 && !neigbourIndices.includes(index)) {
             alert(
                 "Csak az elfoglalt területeddel szomszédos vármegyéket jelölhetsz meg"
             );
@@ -530,38 +534,40 @@
         class="flex-grow min-h-[30%]"
     />
     <div class="h-20 pb-4 bg-slate-100 flex flex-col justify-between">
-        {#if $gameState.gameProgress.type === "terjeszkedes-kerdes"}
+        {#if $gameState.gameProgress.type === "bazisfoglalas"}
+            <PlayerOrdersBar
+                playerOrders={[bazisfoglalasPlayerOrder]}
+                round={0}
+                playerOrderIndex={$gameState.gameProgress.playerOrderIndex}
+            />
+        {:else if $gameState.gameProgress.type === "terjeszkedes" || $gameState.gameProgress.type === "haboru"}
+            <PlayerOrdersBar
+                {playerOrders}
+                round={$gameState.gameProgress.round}
+                playerOrderIndex={$gameState.gameProgress.playerOrderIndex}
+            />
+        {:else if $gameState.gameProgress.type === "terjeszkedes-kerdes"}
             <div class="flex justify-center">
                 <button on:click={() => startTerjeszkedesKerdes()}>
                     Kérdés indítása (terjeszkedés)
                 </button>
             </div>
-        {/if}
-
-        {#if $gameState.gameProgress.type === "felosztas-kerdes"}
+            <PlayerOrdersBar
+                {playerOrders}
+                round={$gameState.gameProgress.round}
+                playerOrderIndex={-1}
+            />
+        {:else if $gameState.gameProgress.type === "felosztas-kerdes"}
             <div class="flex justify-center">
                 <button on:click={() => startFelosztasKerdes()}>
                     Kérdés indítása (felosztás)
                 </button>
             </div>
-        {/if}
-
-        {#if $gameState.gameProgress.type === "felosztas"}
+        {:else if $gameState.gameProgress.type === "felosztas"}
             <div class="text-center">
                 {playerIdToHungarianName($gameState.gameProgress.player)} választ
             </div>
-        {/if}
-
-        {#if $gameState.gameProgress.type === "terjeszkedes" || $gameState.gameProgress.type === "terjeszkedes-kerdes" || $gameState.gameProgress.type === "haboru"}
-            {@const round = $gameState.gameProgress.round}
-            {@const playerOrderIndex =
-                $gameState.gameProgress.type == "terjeszkedes-kerdes"
-                    ? -1
-                    : $gameState.gameProgress.playerOrderIndex}
-            <PlayerOrdersBar {playerOrders} {round} {playerOrderIndex} />
-        {/if}
-
-        {#if $gameState.gameProgress.type === "game-over"}
+        {:else if $gameState.gameProgress.type === "game-over"}
             <div class="text-center text-5xl">Vége a játéknak!</div>
         {/if}
     </div>

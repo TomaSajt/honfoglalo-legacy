@@ -1,6 +1,7 @@
 <script lang="ts">
     import GuessQuestionInGame from "$lib/components/GuessQuestionPrompt.svelte";
     import ScreenOverlay from "$lib/components/ScreenOverlay.svelte";
+    import { sleep } from "$lib/utils";
     import { tick } from "svelte";
     import ChoiceQuestionInGame from "./ChoiceQuestionPrompt.svelte";
 
@@ -35,6 +36,7 @@
                 onResult={async (correct) => {
                     showQuestion = false;
                     await tick();
+                    await sleep(100);
                     choiceResultCallback(correct);
                 }}
             />
@@ -44,6 +46,7 @@
                 onResult={async (order) => {
                     showQuestion = false;
                     await tick();
+                    await sleep(100);
                     guessResultCallback(order);
                 }}
             />

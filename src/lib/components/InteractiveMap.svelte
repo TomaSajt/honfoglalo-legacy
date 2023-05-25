@@ -27,7 +27,7 @@
 
     function getFortImageUrl(regionState: RegionState) {
         assert(regionState.type === "fort");
-        if (regionState.towersRemaining === 0) return "fort/destroyed.png";
+        if (regionState.towersRemaining === 0) return "/fort/destroyed.png";
         let name = playerIdToStringId(regionState.player);
         return `/fort/${name}/${regionState.towersRemaining}.png`;
     }
@@ -53,7 +53,7 @@
             <path
                 fill={getRegionColor(regionState)}
                 d={regionInfo.path}
-                class="region stroke-black stroke-1 cursor-pointer"
+                class="region stroke-black stroke-1 cursor-pointer transition-colors"
                 on:click={() => onRegionClicked(i)}
             />
         {/each}
@@ -80,16 +80,14 @@
                     y={regionInfo.centerPos[1] - 42}
                 />
             {:else if regionState.type === "normal"}
-                <g color="red">
-                    <image
-                        in:fly|local={flyParams}
-                        out:fade|local={fadeParams}
-                        href={getArmyImageUrl(regionState)}
-                        width="30"
-                        x={regionInfo.centerPos[0] - 15}
-                        y={regionInfo.centerPos[1] - 20}
-                    />
-                </g>
+                <image
+                    in:fly|local={flyParams}
+                    out:fade|local={fadeParams}
+                    href={getArmyImageUrl(regionState)}
+                    width="30"
+                    x={regionInfo.centerPos[0] - 15}
+                    y={regionInfo.centerPos[1] - 20}
+                />
             {/if}
             {#if regionState.type === "fort" || regionState.type === "normal"}
                 <rect

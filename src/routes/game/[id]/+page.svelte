@@ -8,7 +8,7 @@
     } from "$lib/state";
     import { gameState } from "$lib/stores";
     import { onMount } from "svelte";
-    import { assert, sleep } from "$lib/utils";
+    import { assert, calcScores, sleep } from "$lib/utils";
     import {
         playerIdToHungarianName,
         playerIdToWeakCssColor,
@@ -31,20 +31,6 @@
         [1, 0, 2],
         [2, 1, 0],
     ];
-
-    $: scores = calcScores($gameState);
-
-    function calcScores(..._: any[]) {
-        let scores = [0, 0, 0];
-        for (let region of $gameState.regions) {
-            if (region.type !== "fort" && region.type !== "normal") continue;
-            scores[region.player] += region.value;
-        }
-        for (let i = 0; i < 3; i++) {
-            scores[i] += 100 * $gameState.defendedCounts[i];
-        }
-        return scores;
-    }
 
     onMount(() => {
         $gameState = defaultGameState();
@@ -291,7 +277,7 @@
             [attacker, defender].sort()
         );
         if (correct.length == 2) {
-            await sleep(1000);
+            await sleep(500);
             startHaboruKerdesNormalTipp(index);
             return;
         }
@@ -346,7 +332,7 @@
             [attacker, defender].sort()
         );
         if (correct.length == 2) {
-            await sleep(1000);
+            await sleep(500);
             await startHaboruKerdesFortTipp(index);
             return;
         }
@@ -387,6 +373,9 @@
                 player: toPlayer,
             };
         }
+        $gameState.defendedCounts[toPlayer] +=
+            $gameState.defendedCounts[fromPlayer];
+        $gameState.defendedCounts[fromPlayer] = 0;
     }
 
     async function startHaboruKerdesFortTipp(index: number) {
@@ -407,7 +396,7 @@
             region = $gameState.regions[index];
             assert(region.type === "fort");
             if (region.towersRemaining > 0) {
-                await sleep(1000);
+                await sleep(500);
                 await startHaboruKerdesFortFeleletvalasztos(index);
                 return;
             }
@@ -499,76 +488,66 @@
 
 <QuestionPrompter bind:this={questionPrompter} />
 
-<div class="flex flex-col h-full">
-    <div class="px-4 pt-4">
-        <nav>
-            <a class="bg-white hover:bg-slate-300" href="/">Főmenü</a>
-        </nav>
-
-        <button on:click={() => ($gameState = defaultGameState())}>
-            Újraindítás
-        </button>
-
-        <div class="flex justify-evenly">
-            {#each scores as score, i}
-                <div class="rounded border border-black w-24">
-                    <div
-                        class="h-4"
-                        style="background-color: {playerIdToWeakCssColor(i)};"
-                    />
-                    <div class="text-center">
-                        {score} pont
-                    </div>
-                    <div
-                        class="h-4"
-                        style="background-color: {playerIdToWeakCssColor(i)};"
-                    />
+<div class="px-4 pt-4">
+    <div class="flex justify-evenly">
+        {#each calcScores($gameState) as score, i}
+            <div class="rounded border border-black w-24">
+                <div
+                    class="h-4"
+                    style="background-color: {playerIdToWeakCssColor(i)};"
+                />
+                <div class="text-center">
+                    {score} pont
                 </div>
-            {/each}
-        </div>
+                <div
+                    class="h-4"
+                    style="background-color: {playerIdToWeakCssColor(i)};"
+                />
+            </div>
+        {/each}
     </div>
+</div>
 
-    <InteractiveMap
-        {onRegionClicked}
-        regionStates={$gameState.regions}
-        class="flex-grow min-h-[30%]"
-    />
-    <div class="h-20 pb-4 bg-slate-100 flex flex-col justify-between">
-        {#if $gameState.gameProgress.type === "bazisfoglalas"}
-            <PlayerOrdersBar
-                playerOrders={[bazisfoglalasPlayerOrder]}
-                round={0}
-                playerOrderIndex={$gameState.gameProgress.playerOrderIndex}
-            />
-        {:else if $gameState.gameProgress.type === "terjeszkedes" || $gameState.gameProgress.type === "haboru"}
-            <PlayerOrdersBar
-                {playerOrders}
-                round={$gameState.gameProgress.round}
-                playerOrderIndex={$gameState.gameProgress.playerOrderIndex}
-            />
-        {:else if $gameState.gameProgress.type === "terjeszkedes-kerdes"}
-            <div class="flex justify-center">
-                <button on:click={() => startTerjeszkedesKerdes()}>
-                    Kérdés indítása (terjeszkedés)
-                </button>
-            </div>
-            <PlayerOrdersBar
-                {playerOrders}
-                round={$gameState.gameProgress.round}
-                playerOrderIndex={-1}
-            />
-        {:else if $gameState.gameProgress.type === "felosztas-kerdes"}
-            <div class="flex justify-center">
-                <button on:click={() => startFelosztasKerdes()}>
-                    Kérdés indítása (felosztás)
-                </button>
-            </div>
-        {:else if $gameState.gameProgress.type === "felosztas"}
-            <div class="text-center">
-                {playerIdToHungarianName($gameState.gameProgress.player)} választ
-            </div>
-        {:else if $gameState.gameProgress.type === "game-over"}
-            <div class="text-center text-5xl">Vége a játéknak!</div>
-        {/if}
-    </div>
+<InteractiveMap
+    {onRegionClicked}
+    regionStates={$gameState.regions}
+    class="flex-grow min-h-[30%]"
+/>
+<div class="h-20 pb-4 bg-slate-100 flex flex-col justify-between">
+    {#if $gameState.gameProgress.type === "bazisfoglalas"}
+        <PlayerOrdersBar
+            playerOrders={[bazisfoglalasPlayerOrder]}
+            round={0}
+            playerOrderIndex={$gameState.gameProgress.playerOrderIndex}
+        />
+    {:else if $gameState.gameProgress.type === "terjeszkedes" || $gameState.gameProgress.type === "haboru"}
+        <PlayerOrdersBar
+            {playerOrders}
+            round={$gameState.gameProgress.round}
+            playerOrderIndex={$gameState.gameProgress.playerOrderIndex}
+        />
+    {:else if $gameState.gameProgress.type === "terjeszkedes-kerdes"}
+        <div class="flex justify-center">
+            <button on:click={() => startTerjeszkedesKerdes()}>
+                Kérdés indítása (terjeszkedés)
+            </button>
+        </div>
+        <PlayerOrdersBar
+            {playerOrders}
+            round={$gameState.gameProgress.round}
+            playerOrderIndex={-1}
+        />
+    {:else if $gameState.gameProgress.type === "felosztas-kerdes"}
+        <div class="flex justify-center">
+            <button on:click={() => startFelosztasKerdes()}>
+                Kérdés indítása (felosztás)
+            </button>
+        </div>
+    {:else if $gameState.gameProgress.type === "felosztas"}
+        <div class="text-center">
+            {playerIdToHungarianName($gameState.gameProgress.player)} választ
+        </div>
+    {:else if $gameState.gameProgress.type === "game-over"}
+        <div class="text-center text-5xl">Vége a játéknak!</div>
+    {/if}
 </div>

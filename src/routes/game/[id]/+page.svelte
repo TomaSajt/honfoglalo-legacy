@@ -6,7 +6,7 @@
         gameStateSchema,
         tryParseState,
     } from "$lib/state";
-    import { gameState } from "$lib/stores";
+    import { gameState } from "./state-store";
     import { onMount } from "svelte";
     import { assert, calcScores, sleep } from "$lib/utils";
     import {

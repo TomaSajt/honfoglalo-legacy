@@ -1,6 +1,6 @@
-import { defaultGameState, type GameState } from '$lib/state';
+import { makeEmptyGameState, type GameState } from '$lib/state';
 import { writable } from 'svelte/store';
 
 
-export let gameState = writable<GameState>(defaultGameState());
+export let gameState = writable<GameState>(makeEmptyGameState());
 

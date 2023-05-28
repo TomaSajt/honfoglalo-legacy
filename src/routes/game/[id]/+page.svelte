@@ -2,7 +2,7 @@
     import InteractiveMap from "$lib/components/InteractiveMap.svelte";
     import QuestionPrompter from "$lib/components/QuestionPrompter.svelte";
     import {
-        defaultGameState,
+        makeEmptyGameState,
         gameStateSchema,
         tryParseState,
     } from "$lib/state";
@@ -33,7 +33,8 @@
     ];
 
     onMount(() => {
-        $gameState = defaultGameState();
+        console.debug("onMount")
+        $gameState = makeEmptyGameState();
         let gameStateString = localStorage.getItem(localStorageName);
         if (gameStateString !== null) {
             let res = tryParseState(gameStateString);
@@ -53,10 +54,7 @@
             }
         });
 
-        return () => {
-            unsubscribe();
-            $gameState = defaultGameState();
-        };
+        return () => unsubscribe();
     });
 
     let working = false;
@@ -67,12 +65,12 @@
             return;
         }
         working = true;
-        switch ($gameState.gameProgress.type) {
+        switch ($gameState.gameProgress.phase) {
             case "bazisfoglalas":
                 handleBazisfoglalas(index);
                 break;
-            case "terjeszkedes":
-                handleTerjeszkedes(index);
+            case "terjeszkedes-valasztas":
+                handleTerjeszkedesValasztas(index);
                 break;
             case "terjeszkedes-kerdes":
                 alert("Indítsd el a kérdést a folytatáshoz");
@@ -80,8 +78,8 @@
             case "felosztas-kerdes":
                 alert("Indítsd el a kérdést a folytatáshoz");
                 break;
-            case "felosztas":
-                handleFelosztas(index);
+            case "felosztas-valasztas":
+                handleFelosztasValasztas(index);
                 break;
             case "haboru":
                 await handleHaboru(index);
@@ -94,7 +92,7 @@
     }
 
     function handleBazisfoglalas(index: number) {
-        assert($gameState.gameProgress.type === "bazisfoglalas");
+        assert($gameState.gameProgress.phase === "bazisfoglalas");
         let neighbourhood = [index, ...getNeighbourIndices(index)];
         if (neighbourhood.some((i) => $gameState.regions[i].type != "empty")) {
             alert(
@@ -113,7 +111,7 @@
         };
         if ($gameState.gameProgress.playerOrderIndex === 2) {
             $gameState.gameProgress = {
-                type: "terjeszkedes",
+                phase: "terjeszkedes-valasztas",
                 playerOrderIndex: 0,
                 round: 0,
             };
@@ -122,8 +120,8 @@
         }
     }
 
-    function handleTerjeszkedes(index: number) {
-        assert($gameState.gameProgress.type === "terjeszkedes");
+    function handleTerjeszkedesValasztas(index: number) {
+        assert($gameState.gameProgress.phase === "terjeszkedes-valasztas");
         if ($gameState.regions[index].type !== "empty") {
             alert("Csak szabad vármegyéket jelölhetsz meg");
             return;
@@ -150,14 +148,14 @@
             $gameState.gameProgress.playerOrderIndex++;
         } else {
             $gameState.gameProgress = {
-                type: "terjeszkedes-kerdes",
+                phase: "terjeszkedes-kerdes",
                 round: $gameState.gameProgress.round,
             };
         }
     }
 
-    function handleFelosztas(index: number) {
-        assert($gameState.gameProgress.type === "felosztas");
+    function handleFelosztasValasztas(index: number) {
+        assert($gameState.gameProgress.phase === "felosztas-valasztas");
         if ($gameState.regions[index].type !== "empty") {
             alert("Csak szabad vármegyéket jelölhetsz meg");
             return;
@@ -184,11 +182,11 @@
 
         if ($gameState.regions.filter((x) => x.type === "empty").length !== 0) {
             $gameState.gameProgress = {
-                type: "felosztas-kerdes",
+                phase: "felosztas-kerdes",
             };
         } else {
             $gameState.gameProgress = {
-                type: "haboru",
+                phase: "haboru",
                 playerOrderIndex: 0,
                 round: 0,
             };
@@ -197,7 +195,7 @@
 
     async function handleHaboru(index: number) {
         let region = $gameState.regions[index];
-        assert($gameState.gameProgress.type === "haboru");
+        assert($gameState.gameProgress.phase === "haboru");
         assert(region.type === "normal" || region.type === "fort");
         let round = $gameState.gameProgress.round;
         let playerOrderIndex = $gameState.gameProgress.playerOrderIndex;
@@ -224,7 +222,7 @@
     }
 
     async function startTerjeszkedesKerdes() {
-        assert($gameState.gameProgress.type === "terjeszkedes-kerdes");
+        assert($gameState.gameProgress.phase === "terjeszkedes-kerdes");
         let correct = await questionPrompter.startChoice([0, 1, 2]);
         for (let i = 0; i < $gameState.regions.length; i++) {
             let region = $gameState.regions[i];
@@ -245,29 +243,29 @@
             $gameState.regions.filter((x) => x.type === "empty").length < 3;
         if (!skipToFelosztas && $gameState.gameProgress.round < 5) {
             $gameState.gameProgress = {
-                type: "terjeszkedes",
+                phase: "terjeszkedes-valasztas",
                 playerOrderIndex: 0,
                 round: $gameState.gameProgress.round + 1,
             };
         } else {
             $gameState.gameProgress = {
-                type: "felosztas-kerdes",
+                phase: "felosztas-kerdes",
             };
         }
     }
 
     async function startFelosztasKerdes() {
-        assert($gameState.gameProgress.type === "felosztas-kerdes");
+        assert($gameState.gameProgress.phase === "felosztas-kerdes");
         let order = await questionPrompter.startGuess([0, 1, 2]);
         $gameState.gameProgress = {
-            type: "felosztas",
+            phase: "felosztas-valasztas",
             player: order[0],
         };
     }
 
     async function startHaboruKerdesNormalFeleletvalasztos(index: number) {
         let region = $gameState.regions[index];
-        assert($gameState.gameProgress.type === "haboru");
+        assert($gameState.gameProgress.phase === "haboru");
         assert(region.type === "normal");
         let round = $gameState.gameProgress.round;
         let playerOrderIndex = $gameState.gameProgress.playerOrderIndex;
@@ -298,7 +296,7 @@
 
     async function startHaboruKerdesNormalTipp(index: number) {
         let region = $gameState.regions[index];
-        assert($gameState.gameProgress.type === "haboru");
+        assert($gameState.gameProgress.phase === "haboru");
         assert(region.type === "normal");
         let round = $gameState.gameProgress.round;
         let playerOrderIndex = $gameState.gameProgress.playerOrderIndex;
@@ -322,7 +320,7 @@
 
     async function startHaboruKerdesFortFeleletvalasztos(index: number) {
         let region = $gameState.regions[index];
-        assert($gameState.gameProgress.type === "haboru");
+        assert($gameState.gameProgress.phase === "haboru");
         assert(region.type === "fort");
         let round = $gameState.gameProgress.round;
         let playerOrderIndex = $gameState.gameProgress.playerOrderIndex;
@@ -380,7 +378,7 @@
 
     async function startHaboruKerdesFortTipp(index: number) {
         let region = $gameState.regions[index];
-        assert($gameState.gameProgress.type === "haboru");
+        assert($gameState.gameProgress.phase === "haboru");
         assert(region.type === "fort");
         let round = $gameState.gameProgress.round;
         let playerOrderIndex = $gameState.gameProgress.playerOrderIndex;
@@ -431,7 +429,7 @@
     }
 
     function progressHaboru() {
-        assert($gameState.gameProgress.type === "haboru");
+        assert($gameState.gameProgress.phase === "haboru");
         if ($gameState.gameProgress.playerOrderIndex < 2)
             $gameState.gameProgress.playerOrderIndex++;
         else {
@@ -440,11 +438,11 @@
                 $gameState.gameProgress.round++;
             else {
                 $gameState.gameProgress = {
-                    type: "game-over",
+                    phase: "game-over",
                 };
             }
         }
-        assert($gameState.gameProgress.type === "haboru");
+        assert($gameState.gameProgress.phase === "haboru");
         let playersInGame = new Set<number>();
         for (let region of $gameState.regions) {
             if (region.type !== "fort" && region.type !== "normal") continue;
@@ -457,7 +455,7 @@
 
         if (playersInGame.size < 2) {
             $gameState.gameProgress = {
-                type: "game-over",
+                phase: "game-over",
             };
             return;
         }
@@ -514,19 +512,19 @@
     class="flex-grow min-h-[30%]"
 />
 <div class="h-20 pb-4 bg-slate-100 flex flex-col justify-between">
-    {#if $gameState.gameProgress.type === "bazisfoglalas"}
+    {#if $gameState.gameProgress.phase === "bazisfoglalas"}
         <PlayerOrdersBar
             playerOrders={[bazisfoglalasPlayerOrder]}
             round={0}
             playerOrderIndex={$gameState.gameProgress.playerOrderIndex}
         />
-    {:else if $gameState.gameProgress.type === "terjeszkedes" || $gameState.gameProgress.type === "haboru"}
+    {:else if $gameState.gameProgress.phase === "terjeszkedes-valasztas" || $gameState.gameProgress.phase === "haboru"}
         <PlayerOrdersBar
             {playerOrders}
             round={$gameState.gameProgress.round}
             playerOrderIndex={$gameState.gameProgress.playerOrderIndex}
         />
-    {:else if $gameState.gameProgress.type === "terjeszkedes-kerdes"}
+    {:else if $gameState.gameProgress.phase === "terjeszkedes-kerdes"}
         <div class="flex justify-center">
             <button on:click={() => startTerjeszkedesKerdes()}>
                 Kérdés indítása (terjeszkedés)
@@ -537,17 +535,17 @@
             round={$gameState.gameProgress.round}
             playerOrderIndex={-1}
         />
-    {:else if $gameState.gameProgress.type === "felosztas-kerdes"}
+    {:else if $gameState.gameProgress.phase === "felosztas-kerdes"}
         <div class="flex justify-center">
             <button on:click={() => startFelosztasKerdes()}>
                 Kérdés indítása (felosztás)
             </button>
         </div>
-    {:else if $gameState.gameProgress.type === "felosztas"}
+    {:else if $gameState.gameProgress.phase === "felosztas-valasztas"}
         <div class="text-center">
             {playerIdToHungarianName($gameState.gameProgress.player)} választ
         </div>
-    {:else if $gameState.gameProgress.type === "game-over"}
+    {:else if $gameState.gameProgress.phase === "game-over"}
         <div class="text-center text-5xl">Vége a játéknak!</div>
     {/if}
 </div>

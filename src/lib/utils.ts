@@ -25,14 +25,14 @@ export function calcScores(gameState: GameState) {
 }
 
 
-export function getHungarianGameProgressName(gameState: GameState) {
-    let type = gameState.gameProgress.type;
-    if (type === "bazisfoglalas") return "Bázisfoglalás"
-    if (type === 'terjeszkedes') return "Terjeszkedés"
-    if (type === 'terjeszkedes-kerdes') return "Terjeszkedés (kérdés)"
-    if (type === 'felosztas-kerdes') return 'Felosztás (kérdés)'
-    if (type === 'felosztas') return "Felosztás"
-    if (type === 'haboru') return "Háború"
-    if (type === 'game-over') return "Vége a játéknak!"
-    return "Ismeretlen játékállapot!"
+export function getHungarianGameProgressPhaseName(gameState: GameState) {
+    let phase = gameState.gameProgress.phase;
+    if (phase === "bazisfoglalas") return "Bázisfoglalás"
+    if (phase === 'terjeszkedes-valasztas') return "Terjeszkedés (választás)"
+    if (phase === 'terjeszkedes-kerdes') return "Terjeszkedés (kérdés)"
+    if (phase === 'felosztas-kerdes') return 'Felosztás (kérdés)'
+    if (phase === 'felosztas-valasztas') return "Felosztás (választás)"
+    if (phase === 'haboru') return "Háború"
+    if (phase === 'game-over') return "Vége a játéknak!"
+    throw new Error("Ismeretlen játékfázis!")
 }

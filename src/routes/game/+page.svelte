@@ -2,7 +2,7 @@
     import { goto } from "$app/navigation";
     import { playerIdToStrongCssColor } from "$lib/player";
     import { tryParseState } from "$lib/state";
-    import { calcScores, getHungarianGameProgressName } from "$lib/utils";
+    import { calcScores, getHungarianGameProgressPhaseName } from "$lib/utils";
     import { onMount } from "svelte";
 
     let gameIds: string[] = [];
@@ -35,6 +35,7 @@
 
             {#if res.success}
                 {@const gameState = res.data}
+                {@const startDate = new Date(gameState.startTimestamp)}
                 <div class="flex gap-2">
                     {#each calcScores(gameState) as score, i}
                         <div
@@ -49,7 +50,15 @@
                         </div>
                     {/each}
                 </div>
-                <div>{getHungarianGameProgressName(gameState)}</div>
+                <div>
+                    <div>Típus: Hosszú hadjárat</div>
+                    <div>
+                        Fázis: {getHungarianGameProgressPhaseName(gameState)}
+                    </div>
+                    <div>
+                        Létrehozva: {startDate.toLocaleDateString()}
+                    </div>
+                </div>
             {:else}
                 <div>Hiba a játék betöltésekor</div>
             {/if}
@@ -57,6 +66,10 @@
                 <button on:click={() => startGame(id)}>Folytatás</button>
                 <button
                     on:click={() => {
+                        let res = confirm(
+                            "Biztosan véglegesen törli ezt a játékot?"
+                        );
+                        if (!res) return;
                         localStorage.removeItem("gameState-" + id);
                         reloadGameIds();
                     }}

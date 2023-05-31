@@ -203,9 +203,9 @@
 
         let neigbourIndices = getPlayerReachableRegionIndices(player);
 
-        if (!neigbourIndices.includes(index)) {
+        if (round !== 5 && !neigbourIndices.includes(index)) {
             alert(
-                "Csak az elfoglalt területeddel szomszédos vármegyéket támadhatodmeg"
+                "Csak az elfoglalt területeddel szomszédos vármegyéket támadhatod meg"
             );
             return;
         }

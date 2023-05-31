@@ -219,9 +219,10 @@
         } else {
             await startHaboruKerdesFortFeleletvalasztos(index);
         }
+        progressHaboru();
     }
 
-    async function startTerjeszkedesKerdes() {
+    async function handleTerjeszkedesKerdes() {
         assert($gameState.gameProgress.phase === "terjeszkedes-kerdes");
         let correct = await questionPrompter.startChoice([0, 1, 2]);
         for (let i = 0; i < $gameState.regions.length; i++) {
@@ -291,7 +292,6 @@
                 awardDefendedBonus(defender);
             }
         }
-        progressHaboru();
     }
 
     async function startHaboruKerdesNormalTipp(index: number) {
@@ -315,7 +315,6 @@
         } else {
             awardDefendedBonus(defender);
         }
-        progressHaboru();
     }
 
     async function startHaboruKerdesFortFeleletvalasztos(index: number) {
@@ -358,7 +357,6 @@
                 awardDefendedBonus(defender);
             }
         }
-        progressHaboru();
     }
 
     function transferRegionOwnerships(fromPlayer: number, toPlayer: number) {
@@ -409,7 +407,6 @@
         } else {
             awardDefendedBonus(defender);
         }
-        progressHaboru();
     }
 
     function damageFort(index: number) {
@@ -424,8 +421,6 @@
 
     function awardDefendedBonus(player: number) {
         $gameState.defendedCounts[player]++;
-        $gameState.defendedCounts = $gameState.defendedCounts;
-        console.log("awarding bonus");
     }
 
     function progressHaboru() {
@@ -527,7 +522,7 @@
         />
     {:else if $gameState.gameProgress.phase === "terjeszkedes-kerdes"}
         <div class="flex justify-center">
-            <button on:click={() => startTerjeszkedesKerdes()}>
+            <button on:click={() => handleTerjeszkedesKerdes()}>
                 Kérdés indítása (terjeszkedés)
             </button>
         </div>

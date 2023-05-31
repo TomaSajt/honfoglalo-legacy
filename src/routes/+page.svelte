@@ -1,25 +1,32 @@
 <div class="h-full flex flex-col">
-    <header class="">
-        <div class="text-3xl text-center py-7 bg-red-500 font-bold text-blue-700">Réges régen, egy messzi-messzi játékot lekoppintva</div>
+    <header
+        class="grid place-items-center h-20 text-3xl bg-red-500 font-bold text-white"
+    >
+        Réges-régen, egy messzi-messzi játékot lekoppintva
     </header>
-    <main class="flex-grow">
-        <div class="max-w-2xl min-w-min mx-auto my-4 flex flex-col text-center min-h-full justify-center gap-4">
-            <a class="bg-orange-400 hover:bg-slate-200 mx-60 py-4 border-2 border-black rounded-xl font-mono font-semibold" href="/game">Játék</a>
-            <a class="bg-orange-400 hover:bg-slate-200 mx-60 py-4 border-2 border-black rounded-xl font-mono font-semibold" href="/settings">Beállítások</a>
-        </div>
+    <main class="flex-grow p-4 flex flex-col items-center gap-2 justify-center">
+        <div class="text-5xl pb-10">Honfoglaló Legacy</div>
+        <a
+            class="bg-orange-400 hover:bg-slate-200 py-3 w-40 border-2 border-black rounded-xl font-semibold text-center"
+            href="/game"
+        >
+            Játék
+        </a>
+
+        <a
+            class="bg-orange-400 hover:bg-slate-200 py-3 w-40 border-2 border-black rounded-xl font-semibold text-center"
+            href="/settings"
+        >
+            Beállítások
+        </a>
     </main>
-    
-    
-    <footer class="bg-green-500 py-7 text-white font-serif text-center">
-        Készült Magyarország Kormánya megbízásából
+
+    <footer
+        class="grid place-items-center h-20 bg-green-500  text-white font-serif"
+    >
+        <div>
+            Készült Magyarország Kormánya megbízásából
+            <span title="Valójában nem">*</span>
+        </div>
     </footer>
 </div>
-
-<style lang="postcss">
-    main {
-        background-image: url("logo.png"), url("laci.png");
-        background-size: 40%, 10%;
-        background-repeat: no-repeat;
-        background-position: center, right 50px top 10px;
-    }
-</style>

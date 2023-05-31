@@ -33,6 +33,6 @@ export function getHungarianGameProgressPhaseName(gameState: GameState) {
     if (phase === 'felosztas-kerdes') return 'Felosztás (kérdés)'
     if (phase === 'felosztas-valasztas') return "Felosztás (választás)"
     if (phase === 'haboru') return "Háború"
-    if (phase === 'game-over') return "Vége a játéknak!"
+    if (phase === 'game-over') return "Játék vége"
     throw new Error("Ismeretlen játékfázis!")
 }

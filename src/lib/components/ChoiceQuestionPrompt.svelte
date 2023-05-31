@@ -21,40 +21,45 @@
         };
     });
 
-    function toggleCorrect(player: number) {
-        correct = correct.includes(player)
-            ? correct.filter((p) => p != player)
-            : [...correct, player];
-    }
-
     function skipTimer() {
         clearInterval(countdownInterval);
         remainingTime = 0;
     }
 </script>
 
-<div class="p-4 max-w-[40rem] w-full mx-auto">
+<div class="p-4 max-w-[30rem] w-full mx-auto">
     <div class="flex flex-col bg-slate-400 p-4 gap-4 rounded-lg">
         <div class="text-center text-lg uppercase font-bold tracking">
             Feleletválasztós kérdés
         </div>
-        <div class="flex gap-2">
+        <div class="flex gap-2 justify-center">
             <div>Hátralévő idő:</div>
             <div>{remainingTime}</div>
         </div>
         {#if remainingTime > 0}
-            <button on:click={() => skipTimer()}>Időzítő kihagyása</button>
+            <button class="text-center" on:click={() => skipTimer()}>
+                Időzítő kihagyása
+            </button>
         {:else}
-            <div class="flex flex-col">
+            <div class="grid grid-cols-2 w-1/2 mx-auto text-center">
                 {#each players as player}
-                    <div class="flex">
-                        <div class="flex-grow">
-                            {playerIdToHungarianName(player)}
-                        </div>
-                        <button on:click={() => toggleCorrect(player)}>
-                            Toggle correct
-                        </button>
+                    <div>
+                        {playerIdToHungarianName(player)}
                     </div>
+                    {#if correct.includes(player)}
+                        <button
+                            on:click={() =>
+                                (correct = correct.filter((p) => p != player))}
+                        >
+                            ✅
+                        </button>
+                    {:else}
+                        <button
+                            on:click={() => (correct = [player, ...correct])}
+                        >
+                            ❌
+                        </button>
+                    {/if}
                 {/each}
             </div>
             <button on:click={() => onResult(correct)}>Befejezés</button>

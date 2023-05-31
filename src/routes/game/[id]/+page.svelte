@@ -33,7 +33,7 @@
     ];
 
     onMount(() => {
-        console.debug("onMount")
+        console.debug("onMount");
         $gameState = makeEmptyGameState();
         let gameStateString = localStorage.getItem(localStorageName);
         if (gameStateString !== null) {
@@ -210,7 +210,7 @@
             return;
         }
         if (region.player === player) {
-            alert("Csak más által birtokolt területet támadhatsz meg");
+            alert("Csak más által birtokolt vármegyét támadhatsz meg");
             return;
         }
 
@@ -459,8 +459,9 @@
             };
             return;
         }
-        if (playersInGame.has(player)) return;
-        progressHaboru();
+        if (!playersInGame.has(player)) {
+            progressHaboru();
+        }
     }
 
     function getNeighbourIndices(index: number) {

@@ -31,7 +31,10 @@
             localStorage.getItem("gameState-" + id) ?? ""
         )}
         <div class="w-96 bg-slate-400 p-4 flex flex-col gap-2">
-            <div class="text-2xl">Játék [{id}]</div>
+            <div>
+                <div class="text-2xl">Játék (Hosszú hadjárat)</div>
+                <div>Azonosító: {id}</div>
+            </div>
 
             {#if res.success}
                 {@const gameState = res.data}
@@ -51,7 +54,6 @@
                     {/each}
                 </div>
                 <div>
-                    <div>Típus: Hosszú hadjárat</div>
                     <div>
                         Fázis: {getHungarianGameProgressPhaseName(gameState)}
                     </div>

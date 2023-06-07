@@ -26,7 +26,9 @@
         >
             Beállítások
         </a>
-        <div class="absolute inset-0 -z-10 opacity-20 flex justify-center p-8 brightness-90 ">
+        <div
+            class="absolute inset-0 -z-10 opacity-20 flex justify-center p-8 brightness-90"
+        >
             <InteractiveMap
                 onRegionClicked={() => {}}
                 regionStates={makeEmptyGameState().regions}
@@ -35,7 +37,7 @@
     </main>
 
     <footer
-        class="grid place-items-center h-20 bg-green-500  text-white font-serif"
+        class="grid place-items-center h-20 bg-green-500 text-white font-serif"
     >
         <div>
             Készült Magyarország Kormánya megbízásából

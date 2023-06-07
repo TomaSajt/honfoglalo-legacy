@@ -46,7 +46,7 @@
         {:else}
             <div class="grid grid-cols-3 w-1/2 mx-auto text-center">
                 {#each order as player, i}
-                    <div>{i+1}.</div>
+                    <div>{i + 1}.</div>
                     <div>
                         {playerIdToHungarianName(player)}
                     </div>

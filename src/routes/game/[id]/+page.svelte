@@ -240,17 +240,24 @@
                 };
             }
         }
-        let skipToFelosztas =
-            $gameState.regions.filter((x) => x.type === "empty").length < 3;
-        if (!skipToFelosztas && $gameState.gameProgress.round < 5) {
+        let emptyCount = $gameState.regions.filter(
+            (x) => x.type === "empty"
+        ).length;
+        if (emptyCount >= 3 && $gameState.gameProgress.round < 5) {
             $gameState.gameProgress = {
                 phase: "terjeszkedes-valasztas",
                 playerOrderIndex: 0,
                 round: $gameState.gameProgress.round + 1,
             };
-        } else {
+        } else if (emptyCount > 0) {
             $gameState.gameProgress = {
                 phase: "felosztas-kerdes",
+            };
+        } else {
+            $gameState.gameProgress = {
+                phase: "haboru",
+                round: 0,
+                playerOrderIndex: 0,
             };
         }
     }

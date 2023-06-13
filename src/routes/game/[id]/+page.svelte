@@ -6,9 +6,8 @@
         gameStateSchema,
         tryParseState,
     } from "$lib/state";
-    import { gameState } from "./state-store";
     import { onMount } from "svelte";
-    import { calcScores } from "$lib/utils";
+    import { calcScores, tryJSONParseSchema } from "$lib/utils";
     import {
         playerIdToHungarianName,
         playerIdToWeakCssColor,
@@ -25,69 +24,59 @@
         handleTerjeszkedesValasztas,
         startFelosztasKerdes,
     } from "$lib/game";
+    import { serverMessageSchema, type ClientMessage } from "./api/schema";
 
     $: localStorageName = "gameState-" + $page.params.id;
+    $: apiURL = `/game/${encodeURI($page.params.id)}/api`;
 
     let questionPrompter: QuestionPrompter;
 
+    let clientId = "";
+
+    let gameState = makeEmptyGameState();
+
     onMount(() => {
         console.debug("onMount");
-        $gameState = makeEmptyGameState();
-        let gameStateString = localStorage.getItem(localStorageName);
-        if (gameStateString !== null) {
-            let res = tryParseState(gameStateString);
-            if (res.success) $gameState = res.data;
-            else alert("Hiba a játék betöltsése során: " + res.error);
-        }
+        const eventSource = new EventSource(apiURL);
 
-        let unsubscribe = gameState.subscribe((newState) => {
-            let res = gameStateSchema.safeParse(newState);
-            if (res.success) {
-                localStorage.setItem(
-                    localStorageName,
-                    JSON.stringify(newState)
-                );
-            } else {
-                alert("Hibás játékállapot: " + res.error);
+        const onmessage = async (event: MessageEvent<any>) => {
+            console.log(event.data);
+            const res = tryJSONParseSchema(serverMessageSchema, event.data);
+            if (!res.success) {
+                console.error("Malformed event received");
+                return;
             }
-        });
+            const msg = res.data;
+            if (msg.type === "set-identity") {
+                clientId = msg.id;
+            } else if (msg.type === "heartbeat-request") {
+                let res = await sendMessage({
+                    type: "heartbeat",
+                    id: clientId,
+                });
+                console.log(`Heartbeat response: ${await res.text()}`);
+            } else if (msg.type === "set-state") {
+                gameState = msg.state;
+            }
+        };
+        eventSource.addEventListener("message", onmessage);
 
-        return () => unsubscribe();
+        return () => {
+            eventSource.removeEventListener("message", onmessage);
+        };
     });
 
     let working = false;
 
+    async function sendMessage(msg: ClientMessage) {
+        return await fetch(apiURL, {
+            method: "POST",
+            body: JSON.stringify(msg),
+        });
+    }
+
     async function onRegionClicked(index: number) {
-        if (working) {
-            alert("A kör még folyamatban van!");
-            return;
-        }
-        working = true;
-        switch ($gameState.gameProgress.phase) {
-            case "bazisfoglalas":
-                handleBazisfoglalas($gameState, index);
-                break;
-            case "terjeszkedes-valasztas":
-                handleTerjeszkedesValasztas($gameState, index);
-                break;
-            case "terjeszkedes-kerdes":
-                alert("Indítsd el a kérdést a folytatáshoz");
-                break;
-            case "felosztas-kerdes":
-                alert("Indítsd el a kérdést a folytatáshoz");
-                break;
-            case "felosztas-valasztas":
-                handleFelosztasValasztas($gameState, index);
-                break;
-            case "haboru":
-                await handleHaboru($gameState, questionPrompter, index);
-                break;
-            case "game-over":
-                alert("A játéknak már vége van");
-                break;
-        }
-        $gameState = $gameState;
-        working = false;
+        sendMessage({ type: "interact-region", index });
     }
 </script>
 
@@ -95,7 +84,7 @@
 
 <div class="px-4 pt-4">
     <div class="flex justify-evenly">
-        {#each calcScores($gameState) as score, i}
+        {#each calcScores(gameState) as score, i}
             <div class="rounded border border-black w-24">
                 <div
                     class="h-4"
@@ -115,31 +104,29 @@
 
 <InteractiveMap
     {onRegionClicked}
-    regionStates={$gameState.regions}
+    regionStates={gameState.regions}
     class="flex-grow min-h-[30%]"
 />
 <div class="h-20 pb-4 bg-slate-100 flex flex-col justify-between">
-    {#if $gameState.gameProgress.phase === "bazisfoglalas"}
+    {#if gameState.gameProgress.phase === "bazisfoglalas"}
         <PlayerOrdersBar
             playerOrders={[bazisfoglalasPlayerOrder]}
             round={0}
-            playerOrderIndex={$gameState.gameProgress.playerOrderIndex}
+            playerOrderIndex={gameState.gameProgress.playerOrderIndex}
         />
-    {:else if $gameState.gameProgress.phase === "terjeszkedes-valasztas" || $gameState.gameProgress.phase === "haboru"}
+    {:else if gameState.gameProgress.phase === "terjeszkedes-valasztas" || gameState.gameProgress.phase === "haboru"}
         <PlayerOrdersBar
             {playerOrders}
-            round={$gameState.gameProgress.round}
-            playerOrderIndex={$gameState.gameProgress.playerOrderIndex}
+            round={gameState.gameProgress.round}
+            playerOrderIndex={gameState.gameProgress.playerOrderIndex}
         />
-    {:else if $gameState.gameProgress.phase === "terjeszkedes-kerdes"}
+    {:else if gameState.gameProgress.phase === "terjeszkedes-kerdes"}
         <div class="flex justify-center">
             <button
                 on:click={async () => {
-                    await handleTerjeszkedesKerdes(
-                        $gameState,
-                        questionPrompter
-                    );
-                    $gameState = $gameState;
+                    throw "hell naw";
+                    await handleTerjeszkedesKerdes(gameState, questionPrompter);
+                    gameState = gameState;
                 }}
             >
                 Kérdés indítása (terjeszkedés)
@@ -147,25 +134,26 @@
         </div>
         <PlayerOrdersBar
             {playerOrders}
-            round={$gameState.gameProgress.round}
+            round={gameState.gameProgress.round}
             playerOrderIndex={-1}
         />
-    {:else if $gameState.gameProgress.phase === "felosztas-kerdes"}
+    {:else if gameState.gameProgress.phase === "felosztas-kerdes"}
         <div class="flex justify-center">
             <button
                 on:click={async () => {
-                    await startFelosztasKerdes($gameState, questionPrompter);
-                    $gameState = $gameState;
+                    throw "hell naw";
+                    await startFelosztasKerdes(gameState, questionPrompter);
+                    gameState = gameState;
                 }}
             >
                 Kérdés indítása (felosztás)
             </button>
         </div>
-    {:else if $gameState.gameProgress.phase === "felosztas-valasztas"}
+    {:else if gameState.gameProgress.phase === "felosztas-valasztas"}
         <div class="text-center">
-            {playerIdToHungarianName($gameState.gameProgress.player)} választ
+            {playerIdToHungarianName(gameState.gameProgress.player)} választ
         </div>
-    {:else if $gameState.gameProgress.phase === "game-over"}
+    {:else if gameState.gameProgress.phase === "game-over"}
         <div class="text-center text-5xl">Vége a játéknak!</div>
     {/if}
 </div>

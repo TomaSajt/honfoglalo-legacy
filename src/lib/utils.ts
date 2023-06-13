@@ -1,3 +1,4 @@
+import type { z } from "zod";
 import type { GameState } from "./state";
 
 export function assert(condition: any, msg?: string): asserts condition {
@@ -35,4 +36,16 @@ export function getHungarianGameProgressPhaseName(gameState: GameState) {
     if (phase === 'haboru') return "Háború"
     if (phase === 'game-over') return "Játék vége"
     throw new Error("Ismeretlen játékfázis!")
+}
+
+
+export function tryJSONParseSchema<T extends z.Schema>(schema: T, text: string) {
+    try {
+        return schema.safeParse(JSON.parse(text)) as z.SafeParseSuccess<z.infer<T>>;
+    } catch (e) {
+        return {
+            success: false,
+            error: e
+        } as const
+    }
 }

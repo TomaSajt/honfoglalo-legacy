@@ -2,7 +2,7 @@ import { z } from "zod";
 import { hungaryMapInfo } from "./mapInfo";
 
 
-const regionSchema = z.discriminatedUnion('type', [
+export const regionSchema = z.discriminatedUnion('type', [
     z.object({
         type: z.literal("fort"),
         player: z.number().int().min(0).max(2),
@@ -23,7 +23,7 @@ const regionSchema = z.discriminatedUnion('type', [
     })
 ]);
 
-const gameProgressScema = z.discriminatedUnion('phase', [
+export const gameProgressScema = z.discriminatedUnion('phase', [
     z.object({
         phase: z.literal("bazisfoglalas"),
         playerOrderIndex: z.number().int().min(0).max(2)
@@ -83,8 +83,7 @@ export function makeEmptyGameState(): GameState {
 
 export function tryParseState(text: string) {
     try {
-        let res = gameStateSchema.safeParse(JSON.parse(text));
-        return res;
+        return gameStateSchema.safeParse(JSON.parse(text));
     } catch (e) {
         return {
             success: false,

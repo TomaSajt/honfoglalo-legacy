@@ -13,14 +13,14 @@
     let guessResultCallback: (order: number[]) => void = () => {};
     let choiceResultCallback: (correctPlayers: number[]) => void = () => {};
 
-    export function startChoice(playerList: number[]) {
+    export function choice(playerList: number[]) {
         players = playerList;
         isChoiceQuestion = true;
         showQuestion = true;
         return new Promise<number[]>((res) => (choiceResultCallback = res));
     }
 
-    export function startGuess(playerList: number[]) {
+    export function guess(playerList: number[]) {
         players = playerList;
         isChoiceQuestion = false;
         showQuestion = true;

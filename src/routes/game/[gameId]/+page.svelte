@@ -1,11 +1,7 @@
 <script lang="ts">
     import InteractiveMap from "$lib/components/InteractiveMap.svelte";
     import QuestionPrompter from "$lib/components/QuestionPrompter.svelte";
-    import {
-        makeEmptyGameState,
-        gameStateSchema,
-        tryParseState,
-    } from "$lib/state";
+    import { makeEmptyGameState } from "$lib/state";
     import { onMount } from "svelte";
     import { calcScores, tryJSONParseSchema } from "$lib/utils";
     import {
@@ -14,24 +10,17 @@
     } from "$lib/player";
     import { page } from "$app/stores";
     import PlayerOrdersBar from "$lib/components/PlayerOrdersBar.svelte";
-    import {
-        bazisfoglalasPlayerOrder,
-        playerOrders,
-        handleBazisfoglalas,
-        handleFelosztasValasztas,
-        handleHaboru,
-        handleTerjeszkedesKerdes,
-        handleTerjeszkedesValasztas,
-        startFelosztasKerdes,
-    } from "$lib/game";
+    import { bazisfoglalasPlayerOrder, playerOrders } from "$lib/game";
     import { serverMessageSchema, type ClientMessage } from "./api/schema";
+    import { goto } from "$app/navigation";
 
-    $: localStorageName = "gameState-" + $page.params.id;
-    $: apiURL = `/game/${encodeURI($page.params.id)}/api`;
+    $: apiURL = `/game/${encodeURI($page.params.gameId)}/api`;
 
     let questionPrompter: QuestionPrompter;
 
     let clientId = "";
+
+    let myPlayerId = -1;
 
     let gameState = makeEmptyGameState();
 
@@ -47,16 +36,26 @@
                 return;
             }
             const msg = res.data;
+            if (msg.type === "back-to-lobby") {
+                goto("/game");
+                return;
+            }
             if (msg.type === "set-identity") {
                 clientId = msg.id;
-            } else if (msg.type === "heartbeat-request") {
+                myPlayerId = msg.playerId;
+                return;
+            }
+            if (msg.type === "heartbeat-request") {
                 let res = await sendMessage({
                     type: "heartbeat",
-                    id: clientId,
+                    clientId: clientId,
                 });
                 console.log(`Heartbeat response: ${await res.text()}`);
-            } else if (msg.type === "set-state") {
+                return;
+            }
+            if (msg.type === "set-state") {
                 gameState = msg.state;
+                return;
             }
         };
         eventSource.addEventListener("message", onmessage);
@@ -66,8 +65,6 @@
         };
     });
 
-    let working = false;
-
     async function sendMessage(msg: ClientMessage) {
         return await fetch(apiURL, {
             method: "POST",
@@ -76,7 +73,7 @@
     }
 
     async function onRegionClicked(index: number) {
-        sendMessage({ type: "interact-region", index });
+        sendMessage({ type: "interact-region", clientId, index });
     }
 </script>
 
@@ -108,6 +105,7 @@
     class="flex-grow min-h-[30%]"
 />
 <div class="h-20 pb-4 bg-slate-100 flex flex-col justify-between">
+    <div>A te színed: {playerIdToHungarianName(myPlayerId)}</div>
     {#if gameState.gameProgress.phase === "bazisfoglalas"}
         <PlayerOrdersBar
             playerOrders={[bazisfoglalasPlayerOrder]}
@@ -125,8 +123,6 @@
             <button
                 on:click={async () => {
                     throw "hell naw";
-                    await handleTerjeszkedesKerdes(gameState, questionPrompter);
-                    gameState = gameState;
                 }}
             >
                 Kérdés indítása (terjeszkedés)
@@ -142,8 +138,6 @@
             <button
                 on:click={async () => {
                     throw "hell naw";
-                    await startFelosztasKerdes(gameState, questionPrompter);
-                    gameState = gameState;
                 }}
             >
                 Kérdés indítása (felosztás)

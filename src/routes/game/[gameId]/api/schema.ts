@@ -11,18 +11,27 @@ export const serverMessageSchema = z.discriminatedUnion('type', [
     }),
     z.object({
         type: z.literal("set-identity"),
-        id: z.string().uuid()
+        id: z.string().uuid(),
+        playerId: z.number().int().min(0).max(2)
+    }),
+    z.object({
+        type: z.literal("back-to-lobby")
+    }),
+    z.object({
+        type: z.literal("show-message"),
+        message: z.string()
     })
 ])
 
 export const clientMessageSchema = z.discriminatedUnion('type', [
     z.object({
         type: z.literal('heartbeat'),
-        id: z.string()
+        clientId: z.string()
     }),
     z.object({
         type: z.literal('interact-region'),
-        index: z.number().int()
+        clientId: z.string(),
+        index: z.number().int(),
     })
 ])
 export type ServerMessage = z.infer<typeof serverMessageSchema>

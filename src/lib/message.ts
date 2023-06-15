@@ -12,7 +12,8 @@ export const serverMessageSchema = z.discriminatedUnion('type', [
     z.object({
         type: z.literal("set-identity"),
         id: z.string().uuid(),
-        playerId: z.number().int().min(0).max(2)
+        playerId: z.number().int().min(0).max(2),
+        state: gameStateSchema
     }),
     z.object({
         type: z.literal("back-to-lobby")

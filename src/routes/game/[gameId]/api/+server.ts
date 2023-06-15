@@ -1,7 +1,7 @@
 import { assert, sleep } from '$lib/utils';
-import { error, redirect } from '@sveltejs/kit';
+import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { clientMessageSchema, type ServerMessage } from './schema';
+import { clientMessageSchema, type ServerMessage } from '$lib/message';
 import { v4 as uuidv4 } from 'uuid'
 import { bazisfoglalasPlayerOrder, handleBazisfoglalas, handleFelosztasValasztas, handleTerjeszkedesValasztas } from '$lib/game';
 import { makeEmptyGameState, type GameState } from '$lib/state';
@@ -111,8 +111,7 @@ export const GET: RequestHandler = async ({ params }) => {
             game.playerClientIds[playerId] = clientId
             clients.set(clientId, client)
             console.log(`assigned new client with ${clientId}`)
-            sendMessage(client, { type: "set-identity", id: clientId, playerId })
-            sendMessage(client, { type: "set-state", state: game.gameState })
+            sendMessage(client, { type: "set-identity", id: clientId, playerId, state: game.gameState })
             heartbeatLoop(clientId)
         },
         cancel() {
@@ -124,6 +123,10 @@ export const GET: RequestHandler = async ({ params }) => {
     })
     return new Response(stream, { headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache" } })
 };
+
+
+
+
 
 export const POST: RequestHandler = async ({ request, params }) => {
     const json = await request.json()

@@ -27,12 +27,17 @@ export const serverMessageSchema = z.discriminatedUnion('type', [
 export const clientMessageSchema = z.discriminatedUnion('type', [
     z.object({
         type: z.literal('heartbeat'),
-        clientId: z.string()
+        clientId: z.string().uuid()
     }),
     z.object({
         type: z.literal('interact-region'),
-        clientId: z.string(),
+        clientId: z.string().uuid(),
         index: z.number().int(),
+    }),
+    z.object({
+        type: z.literal("choose-option"),
+        clientId: z.string().uuid(),
+        optionIndex: z.number().int().min(0).max(3)
     })
 ])
 export type ServerMessage = z.infer<typeof serverMessageSchema>

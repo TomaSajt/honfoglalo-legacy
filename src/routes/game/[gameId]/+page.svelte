@@ -1,7 +1,6 @@
 <script lang="ts">
     import InteractiveMap from "$lib/components/InteractiveMap.svelte";
     import PlayerOrdersBar from "$lib/components/PlayerOrdersBar.svelte";
-    import QuestionPrompter from "$lib/components/QuestionPrompter.svelte";
     import { onMount } from "svelte";
     import { goto } from "$app/navigation";
     import { page } from "$app/stores";
@@ -14,6 +13,7 @@
     } from "$lib/player";
     import { bazisfoglalasPlayerOrder, playerOrders } from "$lib/game";
     import { serverMessageSchema, type ClientMessage } from "$lib/message";
+    import ScreenOverlay from "$lib/components/ScreenOverlay.svelte";
 
     $: apiURL = `/game/${encodeURI($page.params.gameId)}/api`;
 
@@ -24,8 +24,6 @@
     };
 
     let selfInfo: SelfInfo | undefined = undefined;
-
-    let questionPrompter: QuestionPrompter;
 
     onMount(() => {
         console.debug("onMount");
@@ -51,6 +49,9 @@
                 };
                 return;
             }
+            if (msg.type === "show-message") {
+                return;
+            }
             assert(selfInfo);
             if (msg.type === "heartbeat-request") {
                 let res = await sendMessage({
@@ -72,6 +73,7 @@
         return () => {
             eventSource.removeEventListener("message", onmessage);
             eventSource.removeEventListener("error", onerror);
+            eventSource.close();
         };
     });
 
@@ -113,7 +115,31 @@
     <div class="flex-grow grid place-items-center">Loading...</div>
 {:else}
     {@const gameState = selfInfo.gameState}
-    <QuestionPrompter bind:this={questionPrompter} />
+    {#if gameState.gameProgress.phase === "terjeszkedes-kerdes"}
+        <ScreenOverlay>
+            <div class="bg-slate-400 rounded-lg p-12">
+                <div class="pb-8">{gameState.gameProgress.question}</div>
+                <div class="grid grid-cols-2">
+                    {#each gameState.gameProgress.options as option, i}
+                        <button
+                            class="text-center bg-slate-500 hover:bg-slate-600"
+                            on:click={() => {
+                                assert(selfInfo);
+                                sendMessage({
+                                    clientId: selfInfo.clientId,
+                                    type: "choose-option",
+                                    optionIndex: i,
+                                });
+                            }}
+                        >
+                            {option}
+                        </button>
+                    {/each}
+                </div>
+            </div>
+        </ScreenOverlay>
+    {/if}
+
     <div class="px-4 pt-4">
         <div class="flex justify-evenly">
             {#each calcScores(gameState) as score, i}
@@ -153,30 +179,13 @@
                 playerOrderIndex={gameState.gameProgress.playerOrderIndex}
             />
         {:else if gameState.gameProgress.phase === "terjeszkedes-kerdes"}
-            <div class="flex justify-center">
-                <button
-                    on:click={async () => {
-                        throw "hell naw";
-                    }}
-                >
-                    Kérdés indítása (terjeszkedés)
-                </button>
-            </div>
             <PlayerOrdersBar
                 {playerOrders}
                 round={gameState.gameProgress.round}
                 playerOrderIndex={-1}
             />
         {:else if gameState.gameProgress.phase === "felosztas-kerdes"}
-            <div class="flex justify-center">
-                <button
-                    on:click={async () => {
-                        throw "hell naw";
-                    }}
-                >
-                    Kérdés indítása (felosztás)
-                </button>
-            </div>
+            <div />
         {:else if gameState.gameProgress.phase === "felosztas-valasztas"}
             <div class="text-center">
                 {playerIdToHungarianName(gameState.gameProgress.player)} választ

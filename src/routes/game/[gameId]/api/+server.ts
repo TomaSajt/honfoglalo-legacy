@@ -3,7 +3,7 @@ import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
 import { clientMessageSchema, type ServerMessage } from '$lib/message';
 import { v4 as uuidv4 } from 'uuid'
-import { bazisfoglalasPlayerOrder, handleBazisfoglalas, handleFelosztasValasztas, handleTerjeszkedesValasztas } from '$lib/game';
+import { bazisfoglalasPlayerOrder, handleBazisfoglalas, handleFelosztasValasztas, handleTerjeszkedesValasztas, playerOrders } from '$lib/game';
 import { makeEmptyGameState, type GameState } from '$lib/state';
 import { playerIdToHungarianName } from '$lib/player';
 
@@ -72,6 +72,15 @@ function broadcastMessage(game: GameInfo, serverMessage: ServerMessage) {
     }
 }
 
+function broadcastGameState(game: GameInfo) {
+    let gameState = structuredClone(game.gameState)
+    if (gameState.gameProgress.phase === 'terjeszkedes-kerdes') {
+        gameState.gameProgress.submissions = undefined
+        gameState.gameProgress.solutionIndex = undefined
+    }
+    broadcastMessage(game, { type: 'set-state', state: gameState })
+}
+
 function sendMessage(client: ClientInfo, serverMessage: ServerMessage) {
     sendMessageToController(client.controller, serverMessage)
 }
@@ -121,11 +130,13 @@ export const GET: RequestHandler = async ({ params }) => {
             console.log("Closed connection with client with id " + clientId)
         }
     })
-    return new Response(stream, { headers: { "Content-Type": "text/event-stream", "Cache-Control": "no-cache" } })
+    return new Response(stream, {
+        headers: {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache"
+        }
+    })
 };
-
-
-
 
 
 export const POST: RequestHandler = async ({ request, params }) => {
@@ -134,8 +145,8 @@ export const POST: RequestHandler = async ({ request, params }) => {
     if (!parseRes.success) {
         throw error(400)
     }
-    const message = parseRes.data
-    const client = clients.get(message.clientId)
+    const msg = parseRes.data
+    const client = clients.get(msg.clientId)
     if (!client) {
         console.log("Got message from unknown client")
         throw error(403, "Unknown client id")
@@ -151,30 +162,48 @@ export const POST: RequestHandler = async ({ request, params }) => {
         throw error(403, "You are not a participant in this game")
     }
 
-    console.log(`Got message from client with id ${message.clientId}`)
-    console.log(message)
+    console.log(`Got message from client with id ${msg.clientId}`)
+    console.log(msg)
     console.log("color: " + playerIdToHungarianName(clientPlayerId))
-    if (message.type === 'heartbeat') {
+    const gameState = game.gameState
+    if (msg.type === 'heartbeat') {
         client.waitingForHeartbeat = false
         return new Response("ok")
     }
-    if (message.type === 'interact-region') {
-        const index = message.index
-        const gameState = game.gameState
+    if (msg.type === 'choose-option') {
+        if (gameState.gameProgress.phase !== 'terjeszkedes-kerdes') throw error(403)
+        const submissions = gameState.gameProgress.submissions
+        assert(submissions !== undefined)
+        if (submissions[clientPlayerId] === undefined) throw error(403)
+        submissions[clientPlayerId] = msg.optionIndex
+        broadcastGameState(game)
+        return new Response("ok")
+    }
+    if (msg.type === 'interact-region') {
+        const index = msg.index
         console.log(`Client clicked region with index ${index}`)
+        const warn = (str: string) => sendMessage(client, { type: "show-message", message: str })
         switch (gameState.gameProgress.phase) {
             case "bazisfoglalas": {
                 let playerOrderIndex = gameState.gameProgress.playerOrderIndex
                 let playerId = bazisfoglalasPlayerOrder[playerOrderIndex]
                 if (playerId !== clientPlayerId) {
-                    sendMessage(client, { type: "show-message", message: "Nem te jösz!" })
+                    warn("Nem te jössz!")
                     throw error(403)
                 }
-                handleBazisfoglalas(gameState, index);
+                handleBazisfoglalas(gameState, index, warn);
                 break;
             }
             case "terjeszkedes-valasztas": {
-                handleTerjeszkedesValasztas(gameState, index);
+                let round = gameState.gameProgress.round;
+                let playerOrderIndex = gameState.gameProgress.playerOrderIndex;
+
+                let playerId = playerOrders[round][playerOrderIndex];
+                if (playerId !== clientPlayerId) {
+                    warn("Nem te jössz!")
+                    throw error(403)
+                }
+                handleTerjeszkedesValasztas(gameState, index, warn);
                 break;
             }
             case "terjeszkedes-kerdes":
@@ -182,6 +211,11 @@ export const POST: RequestHandler = async ({ request, params }) => {
             case "felosztas-kerdes":
                 throw error(400);
             case "felosztas-valasztas": {
+                let playerId = gameState.gameProgress.player;
+                if (playerId !== clientPlayerId) {
+                    warn("Nem te jössz!")
+                    throw error(403)
+                }
                 handleFelosztasValasztas(gameState, index);
                 break;
             }
@@ -190,7 +224,7 @@ export const POST: RequestHandler = async ({ request, params }) => {
             case "game-over":
                 throw error(400);
         }
-        broadcastMessage(game, { type: 'set-state', state: gameState })
+        broadcastGameState(game)
         return new Response("ok")
     }
     throw error(400)

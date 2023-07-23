@@ -10,9 +10,9 @@
         Réges-régen, egy messzi-messzi játékot lekoppintva
     </header>
     <main
-        class="relative flex-grow p-4 flex flex-col items-center gap-2 justify-center"
+        class="relative flex-grow p-4 flex flex-col items-center gap-2 justify-center overflow-x-hidden0"
     >
-        <div class="text-7xl pb-10 whitespace-nowrap overflow-x-hidden">Honfoglaló Legacy</div>
+        <div class="text-7xl pb-10 whitespace-nowrap">Honfoglaló Legacy</div>
         <a
             class="bg-orange-400 hover:bg-slate-200 py-3 w-40 border-2 border-black rounded-xl font-semibold text-center"
             href="/game"

@@ -19,11 +19,11 @@ type QuestionPrompterBase = {
 }
 
 
-export function handleBazisfoglalas(gameState: GameState, index: number) {
+export function handleBazisfoglalas(gameState: GameState, index: number, warn: (str: string) => any) {
     assert(gameState.gameProgress.phase === "bazisfoglalas");
     let neighbourhood = [index, ...getNeighbourIndices(index)];
     if (neighbourhood.some((i) => gameState.regions[i].type != "empty")) {
-        alert(
+        warn(
             "Csak más játékossal nem szomszédos vármegyéket foglalhatsz el"
         );
         return;
@@ -49,10 +49,10 @@ export function handleBazisfoglalas(gameState: GameState, index: number) {
 }
 
 
-export function handleTerjeszkedesValasztas(gameState: GameState, index: number) {
+export function handleTerjeszkedesValasztas(gameState: GameState, index: number, warn: (str: string) => any) {
     assert(gameState.gameProgress.phase === "terjeszkedes-valasztas");
     if (gameState.regions[index].type !== "empty") {
-        alert("Csak szabad vármegyéket jelölhetsz meg");
+        warn("Csak szabad vármegyéket jelölhetsz meg");
         return;
     }
     let round = gameState.gameProgress.round;
@@ -64,7 +64,7 @@ export function handleTerjeszkedesValasztas(gameState: GameState, index: number)
         (i) => gameState.regions[i].type === "empty"
     ).length;
     if (emptyNeighbourCount !== 0 && !neigbourIndices.includes(index)) {
-        alert(
+        warn(
             "Csak az elfoglalt területeddel szomszédos vármegyéket jelölhetsz meg"
         );
         return;
@@ -79,6 +79,11 @@ export function handleTerjeszkedesValasztas(gameState: GameState, index: number)
         gameState.gameProgress = {
             phase: "terjeszkedes-kerdes",
             round: gameState.gameProgress.round,
+            options: ["A", "B", "C", "D"],
+            question: "Melyik az ABC harmadik betűje?",
+            submitted: [false, false, false],
+            submissions: [undefined, undefined, undefined],
+            solutionIndex: 2
         };
     }
 }
